@@ -1281,6 +1281,731 @@ export const itemBank: ItemBankQuestion[] = [
       },
     ],
   },
+
+  // === ADDITIONAL QUESTIONS FOR VARIETY ===
+
+  // Openness - Additional
+  {
+    id: 'open_add_1',
+    text: 'When you encounter art you don\'t understand, you typically:',
+    category: 'personality',
+    primaryTrait: 'openness',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'open_add_1_a',
+        text: 'Try to figure out what the artist meant',
+        traitDeltas: { openness: 0.15, aestheticSensitivity: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'open_add_1_b',
+        text: 'Move on to something more accessible',
+        traitDeltas: { openness: -0.1, conscientiousness: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'open_add_2',
+    text: 'How do you feel about abstract concepts in music or visuals?',
+    category: 'aesthetic',
+    primaryTrait: 'openness',
+    difficulty: 0.6,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'open_add_2_a',
+        text: 'I find them fascinating and thought-provoking',
+        traitDeltas: { openness: 0.15, aestheticSensitivity: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'open_add_2_b',
+        text: 'I prefer things with clear meaning',
+        traitDeltas: { openness: -0.1, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'open_add_3',
+    text: 'When traveling, you prefer:',
+    category: 'behavioral',
+    primaryTrait: 'openness',
+    difficulty: 0.4,
+    informationValue: 0.6,
+    answers: [
+      {
+        id: 'open_add_3_a',
+        text: 'Exploring unfamiliar neighborhoods and local spots',
+        traitDeltas: { openness: 0.15, noveltySeeking: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'open_add_3_b',
+        text: 'Visiting well-known landmarks and tourist areas',
+        traitDeltas: { openness: -0.1, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'open_add_4',
+    text: 'Your ideal reading material is:',
+    category: 'personality',
+    primaryTrait: 'openness',
+    difficulty: 0.5,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'open_add_4_a',
+        text: 'Something that challenges my worldview',
+        traitDeltas: { openness: 0.15, noveltySeeking: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'open_add_4_b',
+        text: 'Something familiar and comforting',
+        traitDeltas: { openness: -0.1, agreeableness: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Conscientiousness - Additional
+  {
+    id: 'cons_add_1',
+    text: 'When starting a creative project, you:',
+    category: 'behavioral',
+    primaryTrait: 'conscientiousness',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'cons_add_1_a',
+        text: 'Plan everything before beginning',
+        traitDeltas: { conscientiousness: 0.15, openness: -0.05 },
+        value: 1,
+      },
+      {
+        id: 'cons_add_1_b',
+        text: 'Dive in and figure it out as you go',
+        traitDeltas: { conscientiousness: -0.1, openness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'cons_add_2',
+    text: 'Your workspace is usually:',
+    category: 'behavioral',
+    primaryTrait: 'conscientiousness',
+    difficulty: 0.4,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'cons_add_2_a',
+        text: 'Organized with everything in its place',
+        traitDeltas: { conscientiousness: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'cons_add_2_b',
+        text: 'Creative chaos that works for me',
+        traitDeltas: { conscientiousness: -0.1, openness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'cons_add_3',
+    text: 'When curating a playlist or collection, you:',
+    category: 'aesthetic',
+    primaryTrait: 'conscientiousness',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'cons_add_3_a',
+        text: 'Carefully organize by mood, genre, or theme',
+        traitDeltas: { conscientiousness: 0.15, aestheticSensitivity: 0.05 },
+        value: 1,
+      },
+      {
+        id: 'cons_add_3_b',
+        text: 'Just add things you like without much order',
+        traitDeltas: { conscientiousness: -0.1, openness: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'cons_add_4',
+    text: 'How do you approach deadlines?',
+    category: 'behavioral',
+    primaryTrait: 'conscientiousness',
+    difficulty: 0.4,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'cons_add_4_a',
+        text: 'Finish well ahead of time',
+        traitDeltas: { conscientiousness: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'cons_add_4_b',
+        text: 'Work best under last-minute pressure',
+        traitDeltas: { conscientiousness: -0.1, riskTolerance: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Extraversion - Additional
+  {
+    id: 'extr_add_1',
+    text: 'At a gallery opening or concert, you:',
+    category: 'behavioral',
+    primaryTrait: 'extraversion',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'extr_add_1_a',
+        text: 'Strike up conversations with strangers',
+        traitDeltas: { extraversion: 0.15, openness: 0.05 },
+        value: 1,
+      },
+      {
+        id: 'extr_add_1_b',
+        text: 'Focus on the art/music and observe quietly',
+        traitDeltas: { extraversion: -0.1, aestheticSensitivity: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'extr_add_2',
+    text: 'Your ideal weekend involves:',
+    category: 'behavioral',
+    primaryTrait: 'extraversion',
+    difficulty: 0.4,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'extr_add_2_a',
+        text: 'Social events and being around people',
+        traitDeltas: { extraversion: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'extr_add_2_b',
+        text: 'Quiet time alone or with one close friend',
+        traitDeltas: { extraversion: -0.15, aestheticSensitivity: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'extr_add_3',
+    text: 'When discovering new music, you prefer:',
+    category: 'aesthetic',
+    primaryTrait: 'extraversion',
+    difficulty: 0.5,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'extr_add_3_a',
+        text: 'Sharing and discussing it with friends immediately',
+        traitDeltas: { extraversion: 0.15, agreeableness: 0.05 },
+        value: 1,
+      },
+      {
+        id: 'extr_add_3_b',
+        text: 'Keeping it to yourself for a while first',
+        traitDeltas: { extraversion: -0.1, aestheticSensitivity: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'extr_add_4',
+    text: 'After a long day, you recharge by:',
+    category: 'behavioral',
+    primaryTrait: 'extraversion',
+    difficulty: 0.4,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'extr_add_4_a',
+        text: 'Going out and socializing',
+        traitDeltas: { extraversion: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'extr_add_4_b',
+        text: 'Being alone in a quiet space',
+        traitDeltas: { extraversion: -0.15 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Agreeableness - Additional
+  {
+    id: 'agree_add_1',
+    text: 'When someone shares art you dislike, you:',
+    category: 'behavioral',
+    primaryTrait: 'agreeableness',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'agree_add_1_a',
+        text: 'Find something positive to say about it',
+        traitDeltas: { agreeableness: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'agree_add_1_b',
+        text: 'Share your honest critique',
+        traitDeltas: { agreeableness: -0.1, openness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'agree_add_2',
+    text: 'In collaborative creative projects, you tend to:',
+    category: 'behavioral',
+    primaryTrait: 'agreeableness',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'agree_add_2_a',
+        text: 'Compromise to keep harmony',
+        traitDeltas: { agreeableness: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'agree_add_2_b',
+        text: 'Push for your vision even if it causes friction',
+        traitDeltas: { agreeableness: -0.1, riskTolerance: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'agree_add_3',
+    text: 'How do you feel about confrontational art?',
+    category: 'aesthetic',
+    primaryTrait: 'agreeableness',
+    difficulty: 0.6,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'agree_add_3_a',
+        text: 'It makes me uncomfortable',
+        traitDeltas: { agreeableness: 0.15 },
+        aestheticAdjustment: { darknessPreference: -0.1 },
+        value: 1,
+      },
+      {
+        id: 'agree_add_3_b',
+        text: 'I appreciate its power and honesty',
+        traitDeltas: { agreeableness: -0.1, openness: 0.15 },
+        aestheticAdjustment: { darknessPreference: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'agree_add_4',
+    text: 'Your approach to giving feedback on creative work:',
+    category: 'behavioral',
+    primaryTrait: 'agreeableness',
+    difficulty: 0.5,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'agree_add_4_a',
+        text: 'Gentle and encouraging, focusing on positives',
+        traitDeltas: { agreeableness: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'agree_add_4_b',
+        text: 'Direct and honest, even if critical',
+        traitDeltas: { agreeableness: -0.1, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Neuroticism - Additional
+  {
+    id: 'neur_add_1',
+    text: 'When your favorite artist releases something unexpected, you:',
+    category: 'personality',
+    primaryTrait: 'neuroticism',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'neur_add_1_a',
+        text: 'Feel anxious it might disappoint you',
+        traitDeltas: { neuroticism: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'neur_add_1_b',
+        text: 'Excitedly embrace the surprise',
+        traitDeltas: { neuroticism: -0.15, openness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'neur_add_2',
+    text: 'How do you handle criticism of your taste?',
+    category: 'personality',
+    primaryTrait: 'neuroticism',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'neur_add_2_a',
+        text: 'It bothers me more than I\'d like to admit',
+        traitDeltas: { neuroticism: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'neur_add_2_b',
+        text: 'I\'m confident in what I like',
+        traitDeltas: { neuroticism: -0.15, riskTolerance: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'neur_add_3',
+    text: 'Before a big event or performance, you feel:',
+    category: 'personality',
+    primaryTrait: 'neuroticism',
+    difficulty: 0.4,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'neur_add_3_a',
+        text: 'Nervous and overthink what could go wrong',
+        traitDeltas: { neuroticism: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'neur_add_3_b',
+        text: 'Calm and ready to enjoy it',
+        traitDeltas: { neuroticism: -0.15, extraversion: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'neur_add_4',
+    text: 'When things don\'t go as planned creatively:',
+    category: 'personality',
+    primaryTrait: 'neuroticism',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'neur_add_4_a',
+        text: 'I get frustrated and stressed',
+        traitDeltas: { neuroticism: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'neur_add_4_b',
+        text: 'I adapt and see where it leads',
+        traitDeltas: { neuroticism: -0.15, openness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Novelty Seeking - Additional
+  {
+    id: 'novel_add_1',
+    text: 'Your music library is mostly:',
+    category: 'aesthetic',
+    primaryTrait: 'noveltySeeking',
+    difficulty: 0.4,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'novel_add_1_a',
+        text: 'Recent discoveries and new releases',
+        traitDeltas: { noveltySeeking: 0.15, openness: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'novel_add_1_b',
+        text: 'Familiar favorites I return to',
+        traitDeltas: { noveltySeeking: -0.15 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'novel_add_2',
+    text: 'When a new social platform emerges:',
+    category: 'behavioral',
+    primaryTrait: 'noveltySeeking',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'novel_add_2_a',
+        text: 'I\'m among the first to try it',
+        traitDeltas: { noveltySeeking: 0.15, riskTolerance: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'novel_add_2_b',
+        text: 'I wait to see if it\'s worth it',
+        traitDeltas: { noveltySeeking: -0.15, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'novel_add_3',
+    text: 'At a restaurant, you typically order:',
+    category: 'behavioral',
+    primaryTrait: 'noveltySeeking',
+    difficulty: 0.4,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'novel_add_3_a',
+        text: 'Something you\'ve never tried before',
+        traitDeltas: { noveltySeeking: 0.15, openness: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'novel_add_3_b',
+        text: 'Your reliable favorite',
+        traitDeltas: { noveltySeeking: -0.15, conscientiousness: 0.05 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'novel_add_4',
+    text: 'How do you feel about experimental art forms?',
+    category: 'aesthetic',
+    primaryTrait: 'noveltySeeking',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'novel_add_4_a',
+        text: 'They excite me - I love seeing boundaries pushed',
+        traitDeltas: { noveltySeeking: 0.15, openness: 0.1 },
+        aestheticAdjustment: { complexityPreference: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'novel_add_4_b',
+        text: 'I prefer art with proven appeal',
+        traitDeltas: { noveltySeeking: -0.15 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Risk Tolerance - Additional
+  {
+    id: 'risk_add_1',
+    text: 'Your approach to trying new creative software or tools:',
+    category: 'behavioral',
+    primaryTrait: 'riskTolerance',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'risk_add_1_a',
+        text: 'Jump in and learn by experimenting',
+        traitDeltas: { riskTolerance: 0.15, noveltySeeking: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'risk_add_1_b',
+        text: 'Read tutorials and learn properly first',
+        traitDeltas: { riskTolerance: -0.15, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'risk_add_2',
+    text: 'When investing time in a new hobby or skill:',
+    category: 'behavioral',
+    primaryTrait: 'riskTolerance',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'risk_add_2_a',
+        text: 'Willing to fail publicly while learning',
+        traitDeltas: { riskTolerance: 0.15, openness: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'risk_add_2_b',
+        text: 'Practice privately until I\'m competent',
+        traitDeltas: { riskTolerance: -0.15, neuroticism: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'risk_add_3',
+    text: 'Your financial approach to supporting artists:',
+    category: 'behavioral',
+    primaryTrait: 'riskTolerance',
+    difficulty: 0.5,
+    informationValue: 0.65,
+    answers: [
+      {
+        id: 'risk_add_3_a',
+        text: 'Back unknown artists on potential alone',
+        traitDeltas: { riskTolerance: 0.15, noveltySeeking: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'risk_add_3_b',
+        text: 'Support established artists with track records',
+        traitDeltas: { riskTolerance: -0.15, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'risk_add_4',
+    text: 'When sharing your creative work publicly:',
+    category: 'behavioral',
+    primaryTrait: 'riskTolerance',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'risk_add_4_a',
+        text: 'I post without overthinking reactions',
+        traitDeltas: { riskTolerance: 0.15, extraversion: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'risk_add_4_b',
+        text: 'I carefully curate and often hesitate',
+        traitDeltas: { riskTolerance: -0.15, neuroticism: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+
+  // Aesthetic Sensitivity - Additional
+  {
+    id: 'aesth_add_1',
+    text: 'How important is the visual design of album artwork to you?',
+    category: 'aesthetic',
+    primaryTrait: 'aestheticSensitivity',
+    difficulty: 0.4,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'aesth_add_1_a',
+        text: 'Very - it shapes how I experience the music',
+        traitDeltas: { aestheticSensitivity: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'aesth_add_1_b',
+        text: 'Not much - I focus on the sound',
+        traitDeltas: { aestheticSensitivity: -0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'aesth_add_2',
+    text: 'Do you notice small design details in everyday objects?',
+    category: 'personality',
+    primaryTrait: 'aestheticSensitivity',
+    difficulty: 0.4,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'aesth_add_2_a',
+        text: 'Yes, constantly - good and bad design stands out',
+        traitDeltas: { aestheticSensitivity: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'aesth_add_2_b',
+        text: 'Not really - if it works, it works',
+        traitDeltas: { aestheticSensitivity: -0.1, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'aesth_add_3',
+    text: 'When choosing where to spend time:',
+    category: 'behavioral',
+    primaryTrait: 'aestheticSensitivity',
+    difficulty: 0.5,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'aesth_add_3_a',
+        text: 'The atmosphere and aesthetics matter a lot',
+        traitDeltas: { aestheticSensitivity: 0.15 },
+        value: 1,
+      },
+      {
+        id: 'aesth_add_3_b',
+        text: 'Functionality and convenience come first',
+        traitDeltas: { aestheticSensitivity: -0.1, conscientiousness: 0.1 },
+        value: 0,
+      },
+    ],
+  },
+  {
+    id: 'aesth_add_4',
+    text: 'Your reaction to a beautifully shot but slow film:',
+    category: 'aesthetic',
+    primaryTrait: 'aestheticSensitivity',
+    difficulty: 0.6,
+    informationValue: 0.7,
+    answers: [
+      {
+        id: 'aesth_add_4_a',
+        text: 'I can appreciate it purely for the visuals',
+        traitDeltas: { aestheticSensitivity: 0.15, openness: 0.1 },
+        value: 1,
+      },
+      {
+        id: 'aesth_add_4_b',
+        text: 'I need a compelling story to stay engaged',
+        traitDeltas: { aestheticSensitivity: -0.1 },
+        value: 0,
+      },
+    ],
+  },
 ];
 
 /**
