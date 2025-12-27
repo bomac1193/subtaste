@@ -412,7 +412,7 @@ export function getProgressUpdate(
   if (answers.length === 0) {
     return {
       currentConfidence: 0,
-      estimatedAccuracy: 0.5,
+      estimatedAccuracy: 0,
       questionsRemaining: totalPlanned,
       traitProgress: ALL_TRAITS.reduce(
         (acc, t) => ({ ...acc, [t]: { confidence: 0, itemCount: 0 } }),

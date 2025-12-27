@@ -41,7 +41,7 @@ export default function Home() {
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </motion.button>
 
-          <p className="text-neutral-600 text-sm mt-4">12 questions • 2 minutes</p>
+          <p className="text-neutral-600 text-sm mt-4">~24 questions • 3 minutes</p>
         </motion.div>
 
         {/* Features */}
