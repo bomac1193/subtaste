@@ -47,10 +47,7 @@ enabled = false
 port = 54327
 vector_port = 54328
 
-[local]
-enabled = true
-
-# Seed data location
-[db.seed]
-enabled = true
-sql_paths = ["./seed.sql"]
+# Seed data location (optional)
+# [db.seed]
+# enabled = true
+# sql_paths = ["./seed.sql"]
