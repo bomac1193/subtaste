@@ -49,7 +49,7 @@ export default function QuizPage() {
 
       // Compute archetype scores
       const archetypeResult = computeArchetypeScores({
-        traits: psychometricInput,
+        psychometric: psychometricInput,
       });
 
       // Compute enneagram profile
