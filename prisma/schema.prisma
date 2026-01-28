@@ -30,6 +30,11 @@ model User {
   contentScores        ContentScore[]
   embedding            UserEmbedding?
 
+  // SCP Relations
+  depthSignals   DepthSignal[]
+  superfanScores SuperfanScore[]
+  sessions       Session[]
+
   @@index([email])
 }
 
@@ -115,11 +120,28 @@ model ConstellationProfile {
   primaryConstellationId String // ConstellationId (validated at app level)
   blendWeights           Json   // { [ConstellationId]: number }
 
-  // New archetype system (8 viral archetypes)
+  // Legacy archetype system (8 viral archetypes)
   primaryArchetypeId     String? // ArchetypeId: vespyr, ignyx, auryn, prismae, solara, crypta, vertex, fluxus
   archetypeBlendWeights  Json?   // { [ArchetypeId]: number }
   migratedToArchetypes   Boolean @default(false)
   migrationDate          DateTime?
+
+  // THE TWELVE system (12 archetypes)
+  designation           String?  // Designation: S-0, T-1, V-2, L-3, C-4, N-5, H-6, P-7, D-8, F-9, R-10, Ø
+  glyph                 String?  // Glyph: KETH, STRATA, OMEN, SILT, CULL, NEXIS, TOLL, VAULT, LIMN, FORMA, SCHISM, VOID
+  sigil                 String?  // Sigil: Aethonis, Tectris, etc. (revealed progressively)
+  sigilRevealed         Boolean  @default(false)
+  primaryConfidence     Float    @default(0)
+  secondaryDesignation  String?  // Secondary archetype designation
+  secondaryConfidence   Float    @default(0)
+  dimensionScores       Json?    // { [Designation]: number } - full dimension scores
+  contextScores         Json?    // { creating: {...}, consuming: {...}, curating: {...} }
+  genomeVersion         Int      @default(1)
+  totalSignals          Int      @default(0)
+  signalBreakdown       Json?    // { explicit: n, implicit: n }
+  lastDriftCheck        DateTime?
+  driftDetected         Boolean  @default(false)
+  migratedToTwelve      Boolean  @default(false)
 
   // Derived scores
   subtasteIndex     Float @default(50) // 0-100, taste coherence
@@ -135,6 +157,8 @@ model ConstellationProfile {
 
   @@index([primaryConstellationId])
   @@index([primaryArchetypeId])
+  @@index([designation])
+  @@index([glyph])
 }
 
 // =============================================================================
@@ -200,6 +224,10 @@ model ContentItem {
   subcultureId String?
   subculture   SubcultureCluster? @relation(fields: [subcultureId], references: [id], onDelete: SetNull)
 
+  // Creator relation for SCP tracking
+  creatorId String?
+  creator   Creator? @relation("CreatorContent", fields: [creatorId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -210,6 +238,7 @@ model ContentItem {
 
   @@index([type])
   @@index([subcultureId])
+  @@index([creatorId])
 }
 
 /// UserContentInteraction: Logs every user-content touchpoint.
@@ -335,6 +364,43 @@ model QuizSession {
 }
 
 // =============================================================================
+// THE TWELVE Profiling System
+// =============================================================================
+
+/// ProfilingProgress: Tracks user's profiling stage progression.
+model ProfilingProgress {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  currentStage    String   @default("initial") // "initial" | "calibration" | "deep" | "complete"
+  stagesCompleted String[] @default([])
+  signalCount     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([currentStage])
+}
+
+/// SignalHistory: Stores raw signals for temporal decay and drift detection.
+model SignalHistory {
+  id     String @id @default(cuid())
+  userId String
+
+  signalType    String  // "explicit" | "implicit"
+  signalData    Json    // Full signal payload
+  weight        Float   @default(1.0)
+  decayedWeight Float?  // Weight after temporal decay
+  processed     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([signalType])
+}
+
+// =============================================================================
 // Profile History
 // =============================================================================
 
@@ -352,4 +418,137 @@ model ProfileHistory {
 
   @@index([userId])
   @@index([userId, profileType])
+}
+
+// =============================================================================
+// Superfan Conversion Probability (SCP) System
+// =============================================================================
+
+/// Creator: Content producers with constellation weights for taste matching.
+model Creator {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique // URL-friendly identifier
+  avatarUrl   String?
+  bio         String?
+
+  // Constellation weights for taste matching (same format as user blendWeights)
+  constellationWeights Json @default("{}")
+
+  // Stats
+  totalListeners   Int @default(0)
+  superfanCount    Int @default(0)
+  avgSCP           Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  depthSignals   DepthSignal[]
+  superfanScores SuperfanScore[]
+  sessions       Session[]
+  contentItems   ContentItem[] @relation("CreatorContent")
+
+  @@index([slug])
+  @@index([avgSCP])
+}
+
+/// SignalType: Types of depth signals that indicate superfan potential.
+enum SignalType {
+  SAVE              // User saved content
+  REPLAY            // User replayed content
+  CATALOG_DEEP_DIVE // User explored 5+ tracks from same creator in 24h
+  UNPROMPTED_RETURN // User returned organically (not from algorithm)
+  SHARE             // User shared content
+  PLAYLIST_ADD      // User added to playlist
+  PROFILE_VISIT     // User visited creator profile
+  MERCH_CLICK       // User clicked merch link
+  CONCERT_INTEREST  // User showed interest in concert/event
+}
+
+/// SessionSource: How the user arrived at the content.
+enum SessionSource {
+  ORGANIC     // Direct navigation, search, bookmark
+  ALGORITHMIC // Recommendation, feed, discovery
+  SOCIAL      // Shared link, social referral
+  EXTERNAL    // External link, ads
+}
+
+/// DepthSignal: Individual depth signal events for SCP calculation.
+model DepthSignal {
+  id        String     @id @default(cuid())
+  userId    String
+  creatorId String
+  type      SignalType
+  weight    Float      @default(1.0) // Signal-specific weight
+
+  // Optional context
+  contentId String?    // Associated content item
+  metadata  Json?      // Additional signal-specific data
+
+  createdAt DateTime   @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, creatorId])
+  @@index([userId, createdAt])
+  @@index([creatorId, type])
+  @@index([createdAt])
+}
+
+/// SuperfanScore: Cached SCP calculation for a user-creator pair.
+model SuperfanScore {
+  id        String @id @default(cuid())
+  userId    String
+  creatorId String
+
+  // Component scores (0-100)
+  tasteCoherence     Float @default(0) // Constellation alignment
+  depthSignalScore   Float @default(0) // Time-weighted signal aggregation
+  returnPatternScore Float @default(0) // Organic return consistency
+
+  // Combined SCP score (0-100)
+  scpScore Float @default(0)
+
+  // Metadata
+  signalCount     Int      @default(0)
+  lastSignalAt    DateTime?
+  lastCalculatedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, creatorId])
+  @@index([userId])
+  @@index([creatorId])
+  @@index([scpScore])
+  @@index([lastCalculatedAt])
+}
+
+/// Session: Tracks user sessions with source attribution for return pattern analysis.
+model Session {
+  id        String        @id @default(cuid())
+  userId    String
+  creatorId String?       // Optional: session may be creator-specific or general
+  source    SessionSource
+
+  // Session details
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  durationMs  Int?
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator Creator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, creatorId])
+  @@index([userId, source])
+  @@index([creatorId, source])
+  @@index([startedAt])
 }

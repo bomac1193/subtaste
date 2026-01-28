@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
-import type { QuizSession } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { selectAdaptiveQuestions } from '@/lib/quiz/adaptive-selection';
 import { itemBank } from '@/lib/quiz/item-bank';
+
+interface QuizAnswer {
+  questionId: string;
+  answer: number;
+  responseTimeMs?: number;
+  answeredAt: string;
+}
 
 /**
  * POST /api/quiz/session
@@ -12,13 +18,10 @@ import { itemBank } from '@/lib/quiz/item-bank';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, isReturningUser, previousProfileId } = body as {
+    const { userId, isReturningUser } = body as {
       userId?: string;
       isReturningUser?: boolean;
-      previousProfileId?: string;
     };
-
-    const supabase = createAdminClient();
 
     // Select initial questions using adaptive engine
     const { questions: selectedQuestions } = selectAdaptiveQuestions(
@@ -28,26 +31,19 @@ export async function POST(request: NextRequest) {
     );
 
     // Create session
-    const { data: session, error } = await supabase
-      .from('quiz_sessions')
-      .insert({
-        user_id: userId ?? null,
-        status: 'in_progress' as const,
-        selected_questions: selectedQuestions.map((q) => q.id),
+    const session = await prisma.quizSession.create({
+      data: {
+        userId: userId ?? null,
+        status: 'in_progress',
+        selectedQuestions: selectedQuestions.map((q) => q.id),
         answers: [],
-        current_question_index: 0,
-        is_returning_user: isReturningUser ?? false,
-        previous_profile_id: previousProfileId ?? null,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    const typedSession = session as QuizSession;
+        currentQuestionIndex: 0,
+        totalQuestions: selectedQuestions.length,
+      },
+    });
 
     return NextResponse.json({
-      sessionId: typedSession.id,
+      sessionId: session.id,
       questions: selectedQuestions,
       totalQuestions: selectedQuestions.length,
     });
@@ -77,26 +73,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
+    const session = await prisma.quizSession.findUnique({
+      where: { id: sessionId },
+    });
 
-    const { data, error } = await supabase
-      .from('quiz_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
-
-    if (error || !data) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }
       );
     }
 
-    const session = data as QuizSession;
-
     // Get current question
-    const questionIds = session.selected_questions as string[];
-    const currentIndex = session.current_question_index;
+    const questionIds = session.selectedQuestions as string[];
+    const currentIndex = session.currentQuestionIndex;
     const currentQuestionId = questionIds[currentIndex];
     const currentQuestion = itemBank.find((q) => q.id === currentQuestionId);
 
@@ -107,7 +97,6 @@ export async function GET(request: NextRequest) {
         currentIndex,
         totalQuestions: questionIds.length,
         answeredCount: (session.answers as unknown[]).length,
-        estimatedConfidence: session.estimated_confidence,
       },
       currentQuestion,
       isComplete: currentIndex >= questionIds.length,
@@ -143,23 +132,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
-
     // Get current session
-    const { data, error: fetchError } = await supabase
-      .from('quiz_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
+    const session = await prisma.quizSession.findUnique({
+      where: { id: sessionId },
+    });
 
-    if (fetchError || !data) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }
       );
     }
-
-    const session = data as QuizSession;
 
     if (session.status !== 'in_progress') {
       return NextResponse.json(
@@ -169,12 +152,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Add answer
-    const answers = (session.answers as Array<{
-      questionId: string;
-      answer: number;
-      responseTimeMs?: number;
-      answeredAt: string;
-    }>) ?? [];
+    const answers = (session.answers as QuizAnswer[]) ?? [];
 
     answers.push({
       questionId,
@@ -183,22 +161,19 @@ export async function PATCH(request: NextRequest) {
       answeredAt: new Date().toISOString(),
     });
 
-    const questionIds = session.selected_questions as string[];
-    const nextIndex = session.current_question_index + 1;
+    const questionIds = session.selectedQuestions as string[];
+    const nextIndex = session.currentQuestionIndex + 1;
     const isComplete = nextIndex >= questionIds.length;
 
     // Update session
-    const { error: updateError } = await supabase
-      .from('quiz_sessions')
-      .update({
+    await prisma.quizSession.update({
+      where: { id: sessionId },
+      data: {
         answers,
-        current_question_index: nextIndex,
-        status: isComplete ? 'completed' as const : 'in_progress' as const,
-        completed_at: isComplete ? new Date().toISOString() : null,
-      })
-      .eq('id', sessionId);
-
-    if (updateError) throw updateError;
+        currentQuestionIndex: nextIndex,
+        status: isComplete ? 'completed' : 'in_progress',
+      },
+    });
 
     // Get next question if not complete
     let nextQuestion = null;
@@ -243,14 +218,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
-
-    const { error } = await supabase
-      .from('quiz_sessions')
-      .update({ status: 'abandoned' as const })
-      .eq('id', sessionId);
-
-    if (error) throw error;
+    await prisma.quizSession.update({
+      where: { id: sessionId },
+      data: { status: 'abandoned' },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/prisma';
 import { ArchetypeId, ARCHETYPE_IDS } from '@/lib/archetypes/types';
 import { EnneagramType, ENNEAGRAM_TYPES } from '@/lib/enneagram/types';
 
@@ -41,33 +41,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
-
     // Fetch current profiles
-    const [
-      { data: psychProfile, error: psychError },
-      { data: constProfile, error: constError },
-    ] = await Promise.all([
-      supabase
-        .from('psychometric_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
-      supabase
-        .from('constellation_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
+    const [psychProfile, constProfile] = await Promise.all([
+      prisma.psychometricProfile.findUnique({
+        where: { userId },
+      }),
+      prisma.constellationProfile.findUnique({
+        where: { userId },
+      }),
     ]);
 
-    if (psychError || !psychProfile) {
+    if (!psychProfile) {
       return NextResponse.json(
         { error: 'Psychometric profile not found' },
         { status: 404 }
       );
     }
 
-    if (constError || !constProfile) {
+    if (!constProfile) {
       return NextResponse.json(
         { error: 'Constellation profile not found' },
         { status: 404 }
@@ -76,15 +67,15 @@ export async function POST(request: NextRequest) {
 
     // Apply trait adjustments to psychometric profile
     const traitUpdates: Record<string, number> = {};
-    const traitMapping: Record<string, string> = {
+    const traitMapping: Record<string, keyof typeof psychProfile> = {
       openness: 'openness',
       conscientiousness: 'conscientiousness',
       extraversion: 'extraversion',
       agreeableness: 'agreeableness',
       neuroticism: 'neuroticism',
-      noveltySeeking: 'novelty_seeking',
-      aestheticSensitivity: 'aesthetic_sensitivity',
-      riskTolerance: 'risk_tolerance',
+      noveltySeeking: 'noveltySeeking',
+      aestheticSensitivity: 'aestheticSensitivity',
+      riskTolerance: 'riskTolerance',
     };
 
     for (const [trait, adjustment] of Object.entries(refinementResult.traitAdjustments)) {
@@ -98,19 +89,17 @@ export async function POST(request: NextRequest) {
 
     // Update psychometric profile if there are trait adjustments
     if (Object.keys(traitUpdates).length > 0) {
-      const { error: updatePsychError } = await supabase
-        .from('psychometric_profiles')
-        .update({
+      await prisma.psychometricProfile.update({
+        where: { userId },
+        data: {
           ...traitUpdates,
-          overall_confidence: refinementResult.confidence,
-        })
-        .eq('user_id', userId);
-
-      if (updatePsychError) throw updatePsychError;
+          overallConfidence: refinementResult.confidence,
+        },
+      });
     }
 
     // Apply archetype adjustments to constellation profile
-    const currentBlendWeights = (constProfile.archetype_blend_weights || {}) as Record<string, number>;
+    const currentBlendWeights = (constProfile.archetypeBlendWeights || {}) as Record<string, number>;
     const updatedBlendWeights = { ...currentBlendWeights };
 
     for (const [archetype, adjustment] of Object.entries(refinementResult.archetypeAdjustments)) {
@@ -129,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine new primary archetype if weights changed significantly
-    let newPrimaryArchetype = constProfile.primary_archetype_id;
+    let newPrimaryArchetype = constProfile.primaryArchetypeId;
     if (Object.keys(refinementResult.archetypeAdjustments).length > 0) {
       const maxEntry = Object.entries(updatedBlendWeights).reduce(
         (max, [k, v]) => (v > max[1] ? [k, v] : max),
@@ -140,8 +129,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Apply Enneagram adjustments
-    const currentEnneagramScores = (constProfile.enneagram_type_scores || {}) as Record<string, number>;
+    // Apply Enneagram adjustments (stored in psychometric profile)
+    const currentEnneagramScores = (psychProfile.enneagramTypeScores || {}) as Record<string, number>;
     const updatedEnneagramScores = { ...currentEnneagramScores };
 
     for (const [type, adjustment] of Object.entries(refinementResult.enneagramAdjustments)) {
@@ -154,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine new primary Enneagram
-    let newPrimaryEnneagram = constProfile.enneagram_primary;
+    let newPrimaryEnneagram = psychProfile.enneagramPrimary;
     if (Object.keys(refinementResult.enneagramAdjustments).length > 0) {
       const maxEntry = Object.entries(updatedEnneagramScores).reduce(
         (max, [k, v]) => (v > max[1] ? [k, v] : max),
@@ -165,35 +154,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update constellation profile
-    const { error: updateConstError } = await supabase
-      .from('constellation_profiles')
-      .update({
-        primary_archetype_id: newPrimaryArchetype,
-        archetype_blend_weights: updatedBlendWeights,
-        enneagram_primary: newPrimaryEnneagram,
-        enneagram_type_scores: updatedEnneagramScores,
-        refinement_applied: true,
-        refinement_confidence: refinementResult.confidence,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId);
+    // Update constellation profile with archetype changes
+    await prisma.constellationProfile.update({
+      where: { userId },
+      data: {
+        primaryArchetypeId: newPrimaryArchetype,
+        archetypeBlendWeights: updatedBlendWeights,
+      },
+    });
 
-    if (updateConstError) throw updateConstError;
+    // Update psychometric profile with Enneagram changes
+    if (Object.keys(refinementResult.enneagramAdjustments).length > 0) {
+      await prisma.psychometricProfile.update({
+        where: { userId },
+        data: {
+          enneagramPrimary: newPrimaryEnneagram,
+          enneagramTypeScores: updatedEnneagramScores,
+          enneagramConfidence: refinementResult.confidence,
+        },
+      });
+    }
 
     // Save to profile history
-    await supabase.from('profile_history').insert({
-      user_id: userId,
-      profile_type: 'refinement',
-      profile_data: {
-        refinementResult,
-        appliedAt: new Date().toISOString(),
-        previousArchetype: constProfile.primary_archetype_id,
-        newArchetype: newPrimaryArchetype,
-        previousEnneagram: constProfile.enneagram_primary,
-        newEnneagram: newPrimaryEnneagram,
+    await prisma.profileHistory.create({
+      data: {
+        userId,
+        profileType: 'refinement',
+        profileData: {
+          refinementResult,
+          appliedAt: new Date().toISOString(),
+          previousArchetype: constProfile.primaryArchetypeId,
+          newArchetype: newPrimaryArchetype,
+          previousEnneagram: psychProfile.enneagramPrimary,
+          newEnneagram: newPrimaryEnneagram,
+        },
+        trigger: 'refinement_quiz',
       },
-      trigger: 'refinement_quiz',
     });
 
     return NextResponse.json({

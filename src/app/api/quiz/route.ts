@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
-import type { User, QuizSession } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { ScoringResult, TraitScore } from '@/lib/quiz/scoring';
 import { TraitId } from '@/lib/quiz/item-bank';
 import { computeConstellationProfile } from '@/lib/scoring';
@@ -15,30 +14,30 @@ function convertToPsychometricProfile(traits: Record<TraitId, TraitScore>) {
     extraversion: traits.extraversion?.score ?? 0.5,
     agreeableness: traits.agreeableness?.score ?? 0.5,
     neuroticism: traits.neuroticism?.score ?? 0.5,
-    novelty_seeking: traits.noveltySeeking?.score ?? 0.5,
-    aesthetic_sensitivity: traits.aestheticSensitivity?.score ?? 0.5,
-    risk_tolerance: traits.riskTolerance?.score ?? 0.5,
+    noveltySeeking: traits.noveltySeeking?.score ?? 0.5,
+    aestheticSensitivity: traits.aestheticSensitivity?.score ?? 0.5,
+    riskTolerance: traits.riskTolerance?.score ?? 0.5,
   };
 }
 
 /**
- * Convert aesthetic to DB format (snake_case)
+ * Convert aesthetic to DB format
  */
 function convertToAestheticPreference(aesthetic: ScoringResult['aesthetic']) {
   return {
-    color_palette_vector: aesthetic.colorPaletteVector ?? [],
-    darkness_preference: aesthetic.darknessPreference,
-    complexity_preference: aesthetic.complexityPreference,
-    symmetry_preference: aesthetic.symmetryPreference,
-    organic_vs_synthetic: aesthetic.organicVsSynthetic,
-    minimal_vs_maximal: aesthetic.minimalVsMaximal,
-    tempo_range_min: Math.round(aesthetic.tempoRangeMin),
-    tempo_range_max: Math.round(aesthetic.tempoRangeMax),
-    energy_range_min: aesthetic.energyRangeMin,
-    energy_range_max: aesthetic.energyRangeMax,
-    harmonic_dissonance_tolerance: aesthetic.harmonicDissonanceTolerance,
-    rhythm_preference: aesthetic.rhythmPreference,
-    acoustic_vs_digital: aesthetic.acousticVsDigital,
+    colorPaletteVector: aesthetic.colorPaletteVector ?? [],
+    darknessPreference: aesthetic.darknessPreference,
+    complexityPreference: aesthetic.complexityPreference,
+    symmetryPreference: aesthetic.symmetryPreference,
+    organicVsSynthetic: aesthetic.organicVsSynthetic,
+    minimalVsMaximal: aesthetic.minimalVsMaximal,
+    tempoRangeMin: Math.round(aesthetic.tempoRangeMin),
+    tempoRangeMax: Math.round(aesthetic.tempoRangeMax),
+    energyRangeMin: aesthetic.energyRangeMin,
+    energyRangeMax: aesthetic.energyRangeMax,
+    harmonicDissonanceTolerance: aesthetic.harmonicDissonanceTolerance,
+    rhythmPreference: aesthetic.rhythmPreference,
+    acousticVsDigital: aesthetic.acousticVsDigital,
   };
 }
 
@@ -46,7 +45,7 @@ function convertToAestheticPreference(aesthetic: ScoringResult['aesthetic']) {
  * POST /api/quiz
  *
  * Submit quiz results and compute constellation profile.
- * Creates or updates user profile in Supabase.
+ * Creates or updates user profile using Prisma.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -64,8 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
-
     // Convert scoring result to DB formats
     const psychometric = convertToPsychometricProfile(scoringResult.traits);
     const aesthetic = convertToAestheticPreference(scoringResult.aesthetic);
@@ -75,14 +72,12 @@ export async function POST(request: NextRequest) {
 
     if (finalUserId) {
       // Verify user exists
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', finalUserId)
-        .single();
+      const existingUser = await prisma.user.findUnique({
+        where: { id: finalUserId },
+        select: { id: true },
+      });
 
       if (!existingUser) {
-        // User doesn't exist, create new one
         console.log('User ID not found, creating new user');
         finalUserId = undefined;
       }
@@ -90,120 +85,102 @@ export async function POST(request: NextRequest) {
 
     if (!finalUserId) {
       // Create new anonymous user
-      const { data: newUser, error: userError } = await supabase
-        .from('users')
-        .insert({})
-        .select('id')
-        .single();
-
-      if (userError) throw userError;
-      finalUserId = (newUser as Pick<User, 'id'>).id;
+      const newUser = await prisma.user.create({
+        data: {},
+        select: { id: true },
+      });
+      finalUserId = newUser.id;
+      console.log('Created new user:', finalUserId);
     }
 
     // Upsert psychometric profile
-    const { error: psychError } = await supabase
-      .from('psychometric_profiles')
-      .upsert(
-        {
-          user_id: finalUserId,
-          ...psychometric,
-          trait_confidence: Object.fromEntries(
-            Object.entries(scoringResult.traits).map(([k, v]) => [k, v.confidence])
-          ),
-          overall_confidence: scoringResult.overallConfidence,
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (psychError) throw psychError;
+    await prisma.psychometricProfile.upsert({
+      where: { userId: finalUserId },
+      create: {
+        userId: finalUserId,
+        ...psychometric,
+        traitConfidence: Object.fromEntries(
+          Object.entries(scoringResult.traits).map(([k, v]) => [k, v.confidence])
+        ),
+      },
+      update: {
+        ...psychometric,
+        traitConfidence: Object.fromEntries(
+          Object.entries(scoringResult.traits).map(([k, v]) => [k, v.confidence])
+        ),
+      },
+    });
 
     // Upsert aesthetic preferences
-    const { error: aestheticError } = await supabase
-      .from('aesthetic_preferences')
-      .upsert(
-        {
-          user_id: finalUserId,
-          ...aesthetic,
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (aestheticError) throw aestheticError;
+    await prisma.aestheticPreference.upsert({
+      where: { userId: finalUserId },
+      create: {
+        userId: finalUserId,
+        ...aesthetic,
+      },
+      update: aesthetic,
+    });
 
     // Compute constellation profile
-    const psychometricInput = {
-      openness: psychometric.openness,
-      conscientiousness: psychometric.conscientiousness,
-      extraversion: psychometric.extraversion,
-      agreeableness: psychometric.agreeableness,
-      neuroticism: psychometric.neuroticism,
-      noveltySeeking: psychometric.novelty_seeking,
-      aestheticSensitivity: psychometric.aesthetic_sensitivity,
-      riskTolerance: psychometric.risk_tolerance,
-    };
-
-    const aestheticInput = {
-      colorPaletteVector: aesthetic.color_palette_vector,
-      darknessPreference: aesthetic.darkness_preference,
-      complexityPreference: aesthetic.complexity_preference,
-      symmetryPreference: aesthetic.symmetry_preference,
-      organicVsSynthetic: aesthetic.organic_vs_synthetic,
-      minimalVsMaximal: aesthetic.minimal_vs_maximal,
-      tempoRangeMin: aesthetic.tempo_range_min,
-      tempoRangeMax: aesthetic.tempo_range_max,
-      energyRangeMin: aesthetic.energy_range_min,
-      energyRangeMax: aesthetic.energy_range_max,
-      harmonicDissonanceTolerance: aesthetic.harmonic_dissonance_tolerance,
-      rhythmPreference: aesthetic.rhythm_preference,
-      acousticVsDigital: aesthetic.acoustic_vs_digital,
-    };
-
     const { profile, result, enhanced } = computeConstellationProfile(
-      psychometricInput,
-      aestheticInput
+      psychometric,
+      aesthetic
     );
 
     // Upsert constellation profile
-    const { error: constError } = await supabase
-      .from('constellation_profiles')
-      .upsert(
-        {
-          user_id: finalUserId,
-          primary_constellation_id: profile.primaryConstellationId,
-          blend_weights: profile.blendWeights,
-          subtaste_index: profile.subtasteIndex,
-          explorer_score: profile.explorerScore,
-          early_adopter_score: profile.earlyAdopterScore,
-          enhanced_interpretation: enhanced ?? null,
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (constError) throw constError;
+    await prisma.constellationProfile.upsert({
+      where: { userId: finalUserId },
+      create: {
+        userId: finalUserId,
+        primaryConstellationId: profile.primaryConstellationId,
+        blendWeights: profile.blendWeights,
+        subtasteIndex: profile.subtasteIndex,
+        explorerScore: profile.explorerScore,
+        earlyAdopterScore: profile.earlyAdopterScore,
+      },
+      update: {
+        primaryConstellationId: profile.primaryConstellationId,
+        blendWeights: profile.blendWeights,
+        subtasteIndex: profile.subtasteIndex,
+        explorerScore: profile.explorerScore,
+        earlyAdopterScore: profile.earlyAdopterScore,
+      },
+    });
 
     // Update quiz session if provided
     if (sessionId) {
-      await supabase
-        .from('quiz_sessions')
-        .update({
-          user_id: finalUserId,
+      await prisma.quizSession.update({
+        where: { id: sessionId },
+        data: {
+          userId: finalUserId,
           status: 'completed',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', sessionId);
+          scoringResult: {
+            psychometric,
+            aesthetic,
+            constellation: profile,
+          },
+        },
+      }).catch(() => {
+        // Session might not exist, ignore error
+        console.log('Quiz session not found:', sessionId);
+      });
     }
 
     // Save to profile history
-    await supabase.from('profile_history').insert({
-      user_id: finalUserId,
-      profile_type: 'constellation',
-      profile_data: {
-        psychometric: psychometricInput,
-        aesthetic: aestheticInput,
-        constellation: profile,
+    await prisma.profileHistory.create({
+      data: {
+        userId: finalUserId,
+        profileType: 'constellation',
+        profileData: {
+          psychometric,
+          aesthetic,
+          constellation: profile,
+        },
+        trigger: 'quiz_complete',
       },
-      trigger: 'quiz_complete',
     });
+
+    console.log('Quiz results saved successfully for user:', finalUserId);
 
     return NextResponse.json({
       success: true,
@@ -242,15 +219,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
+    const session = await prisma.quizSession.findUnique({
+      where: { id: sessionId },
+    });
 
-    const { data: session, error } = await supabase
-      .from('quiz_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
-
-    if (error) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }

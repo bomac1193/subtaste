@@ -1,26 +1,53 @@
 /**
- * Supabase Client
+ * Supabase Client (Stub Mode)
  *
- * Provides Supabase clients for browser and server contexts.
+ * Stub implementation for development without Supabase connection.
+ * Replace with real implementation when Supabase is configured.
  */
 
-import { createBrowserClient } from '@supabase/ssr';
+// Stub client that doesn't connect to Supabase
+const stubClient = {
+  auth: {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    onAuthStateChange: (_callback: unknown) => ({
+      data: { subscription: { unsubscribe: () => {} } },
+    }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
+    signUp: async () => ({ data: { user: null, session: null }, error: null }),
+    signInWithOAuth: async () => ({ data: { url: null, provider: null }, error: null }),
+    signOut: async () => ({ error: null }),
+  },
+  from: (table: string) => ({
+    select: () => stubQuery(table),
+    insert: () => stubQuery(table),
+    update: () => stubQuery(table),
+    delete: () => stubQuery(table),
+    upsert: () => stubQuery(table),
+  }),
+};
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+function stubQuery(_table: string) {
+  return {
+    select: () => stubQuery(_table),
+    eq: () => stubQuery(_table),
+    neq: () => stubQuery(_table),
+    single: () => Promise.resolve({ data: null, error: null }),
+    order: () => stubQuery(_table),
+    limit: () => stubQuery(_table),
+    then: (resolve: (value: { data: null; error: null }) => void) =>
+      resolve({ data: null, error: null }),
+  };
 }
 
 /**
- * Browser client - uses anon key, handles auth cookies automatically
+ * Browser client - stub version
  */
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return stubClient;
 }
 
 // Default export for convenience
-export const supabase = createClient();
+export const supabase = stubClient;
 
 export default supabase;

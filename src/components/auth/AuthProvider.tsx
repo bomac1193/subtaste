@@ -1,12 +1,20 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+
+// Stub user type for development
+interface StubUser {
+  id: string;
+  email: string;
+  user_metadata: {
+    display_name?: string;
+    avatar_url?: string;
+  };
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: StubUser | null;
+  session: { user: StubUser } | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -16,63 +24,61 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Stub user for development - simulates a logged-in user
+const STUB_USER: StubUser = {
+  id: 'stub-user-dev-001',
+  email: 'dev@subtaste.local',
+  user_metadata: {
+    display_name: 'Dev User',
+    avatar_url: undefined,
+  },
+};
+
+// Set to true to simulate logged-in state, false for logged-out
+const STUB_LOGGED_IN = true;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<StubUser | null>(null);
+  const [session, setSession] = useState<{ user: StubUser } | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Simulate async auth check
+    const timer = setTimeout(() => {
+      if (STUB_LOGGED_IN) {
+        setUser(STUB_USER);
+        setSession({ user: STUB_USER });
+      }
       setLoading(false);
-    });
+    }, 100);
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    return () => clearTimeout(timer);
+  }, []);
 
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+  const signIn = async (_email: string, _password: string) => {
+    // Stub sign in - always succeeds
+    setUser(STUB_USER);
+    setSession({ user: STUB_USER });
+    return { error: null };
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { error };
+  const signUp = async (_email: string, _password: string) => {
+    // Stub sign up - always succeeds
+    setUser(STUB_USER);
+    setSession({ user: STUB_USER });
+    return { error: null };
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { error };
+    // Stub Google sign in - always succeeds
+    setUser(STUB_USER);
+    setSession({ user: STUB_USER });
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
     // Clear local storage
     localStorage.removeItem('subtaste_user_id');
     localStorage.removeItem('subtaste_session_count');

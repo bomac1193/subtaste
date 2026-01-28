@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
-import type {
-  User,
-  PsychometricProfile,
-  AestheticPreference,
-  ConstellationProfile,
-  RepresentationProfile,
-} from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { computeConstellationProfile } from '@/lib/scoring';
 import { exportAestheticProfile } from '@/lib/profile-export';
 
@@ -28,61 +21,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
+    // Fetch user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-    // Fetch user with all profiles
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userData) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
-    const user = userData as User;
-
     // Fetch all profile data in parallel
-    const [psychResult, aestheticResult, constResult, repResult] = await Promise.all([
-      supabase
-        .from('psychometric_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
-      supabase
-        .from('aesthetic_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
-      supabase
-        .from('constellation_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
-      supabase
-        .from('representation_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
+    const [psychometric, aesthetic, constellation] = await Promise.all([
+      prisma.psychometricProfile.findUnique({
+        where: { userId },
+      }),
+      prisma.aestheticPreference.findUnique({
+        where: { userId },
+      }),
+      prisma.constellationProfile.findUnique({
+        where: { userId },
+      }),
     ]);
 
-    const psychometric = psychResult.data as PsychometricProfile | null;
-    const aesthetic = aestheticResult.data as AestheticPreference | null;
-    const constellation = constResult.data as ConstellationProfile | null;
-    const representation = repResult.data as RepresentationProfile | null;
+    // RepresentationProfile not yet implemented
+    const representation = null;
 
     // Return based on format
     if (format === 'summary') {
       return NextResponse.json({
         userId: user.id,
-        constellation: constellation?.primary_constellation_id,
-        subtasteIndex: constellation?.subtaste_index,
-        explorerScore: constellation?.explorer_score,
-        earlyAdopterScore: constellation?.early_adopter_score,
+        constellation: constellation?.primaryConstellationId,
+        subtasteIndex: constellation?.subtasteIndex,
+        explorerScore: constellation?.explorerScore,
+        earlyAdopterScore: constellation?.earlyAdopterScore,
       });
     }
 
@@ -94,25 +68,25 @@ export async function GET(request: NextRequest) {
         extraversion: psychometric.extraversion,
         agreeableness: psychometric.agreeableness,
         neuroticism: psychometric.neuroticism,
-        noveltySeeking: psychometric.novelty_seeking,
-        aestheticSensitivity: psychometric.aesthetic_sensitivity,
-        riskTolerance: psychometric.risk_tolerance,
+        noveltySeeking: psychometric.noveltySeeking,
+        aestheticSensitivity: psychometric.aestheticSensitivity,
+        riskTolerance: psychometric.riskTolerance,
       };
 
       const aestheticInput = {
-        colorPaletteVector: aesthetic.color_palette_vector ?? [],
-        darknessPreference: aesthetic.darkness_preference,
-        complexityPreference: aesthetic.complexity_preference,
-        symmetryPreference: aesthetic.symmetry_preference,
-        organicVsSynthetic: aesthetic.organic_vs_synthetic,
-        minimalVsMaximal: aesthetic.minimal_vs_maximal,
-        tempoRangeMin: aesthetic.tempo_range_min,
-        tempoRangeMax: aesthetic.tempo_range_max,
-        energyRangeMin: aesthetic.energy_range_min,
-        energyRangeMax: aesthetic.energy_range_max,
-        harmonicDissonanceTolerance: aesthetic.harmonic_dissonance_tolerance,
-        rhythmPreference: aesthetic.rhythm_preference,
-        acousticVsDigital: aesthetic.acoustic_vs_digital,
+        colorPaletteVector: aesthetic.colorPaletteVector ?? [],
+        darknessPreference: aesthetic.darknessPreference,
+        complexityPreference: aesthetic.complexityPreference,
+        symmetryPreference: aesthetic.symmetryPreference,
+        organicVsSynthetic: aesthetic.organicVsSynthetic,
+        minimalVsMaximal: aesthetic.minimalVsMaximal,
+        tempoRangeMin: aesthetic.tempoRangeMin,
+        tempoRangeMax: aesthetic.tempoRangeMax,
+        energyRangeMin: aesthetic.energyRangeMin,
+        energyRangeMax: aesthetic.energyRangeMax,
+        harmonicDissonanceTolerance: aesthetic.harmonicDissonanceTolerance,
+        rhythmPreference: aesthetic.rhythmPreference,
+        acousticVsDigital: aesthetic.acousticVsDigital,
       };
 
       // Recompute for export
@@ -124,10 +98,10 @@ export async function GET(request: NextRequest) {
         representation ? {
           energy: representation.energy,
           complexity: representation.complexity,
-          temporalStyle: representation.temporal_style,
-          sensoryDensity: representation.sensory_density,
-          identityProjection: representation.identity_projection,
-          ambiguityTolerance: representation.ambiguity_tolerance,
+          temporalStyle: representation.temporalStyle,
+          sensoryDensity: representation.sensoryDensity,
+          identityProjection: representation.identityProjection,
+          ambiguityTolerance: representation.ambiguityTolerance,
           version: representation.version,
         } : undefined
       );
@@ -169,24 +143,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
-
     // Fetch current profiles
-    const [psychResult, aestheticResult] = await Promise.all([
-      supabase
-        .from('psychometric_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
-      supabase
-        .from('aesthetic_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single(),
+    const [psychometric, aesthetic] = await Promise.all([
+      prisma.psychometricProfile.findUnique({
+        where: { userId },
+      }),
+      prisma.aestheticPreference.findUnique({
+        where: { userId },
+      }),
     ]);
-
-    const psychometric = psychResult.data as PsychometricProfile | null;
-    const aesthetic = aestheticResult.data as AestheticPreference | null;
 
     if (!psychometric || !aesthetic) {
       return NextResponse.json(
@@ -202,36 +167,35 @@ export async function POST(request: NextRequest) {
       extraversion: psychometric.extraversion,
       agreeableness: psychometric.agreeableness,
       neuroticism: psychometric.neuroticism,
-      noveltySeeking: psychometric.novelty_seeking,
-      aestheticSensitivity: psychometric.aesthetic_sensitivity,
-      riskTolerance: psychometric.risk_tolerance,
+      noveltySeeking: psychometric.noveltySeeking,
+      aestheticSensitivity: psychometric.aestheticSensitivity,
+      riskTolerance: psychometric.riskTolerance,
     };
 
     const aestheticInput = {
-      colorPaletteVector: aesthetic.color_palette_vector,
-      darknessPreference: aesthetic.darkness_preference,
-      complexityPreference: aesthetic.complexity_preference,
-      symmetryPreference: aesthetic.symmetry_preference,
-      organicVsSynthetic: aesthetic.organic_vs_synthetic,
-      minimalVsMaximal: aesthetic.minimal_vs_maximal,
-      tempoRangeMin: aesthetic.tempo_range_min,
-      tempoRangeMax: aesthetic.tempo_range_max,
-      energyRangeMin: aesthetic.energy_range_min,
-      energyRangeMax: aesthetic.energy_range_max,
-      harmonicDissonanceTolerance: aesthetic.harmonic_dissonance_tolerance,
-      rhythmPreference: aesthetic.rhythm_preference,
-      acousticVsDigital: aesthetic.acoustic_vs_digital,
+      colorPaletteVector: aesthetic.colorPaletteVector,
+      darknessPreference: aesthetic.darknessPreference,
+      complexityPreference: aesthetic.complexityPreference,
+      symmetryPreference: aesthetic.symmetryPreference,
+      organicVsSynthetic: aesthetic.organicVsSynthetic,
+      minimalVsMaximal: aesthetic.minimalVsMaximal,
+      tempoRangeMin: aesthetic.tempoRangeMin,
+      tempoRangeMax: aesthetic.tempoRangeMax,
+      energyRangeMin: aesthetic.energyRangeMin,
+      energyRangeMax: aesthetic.energyRangeMax,
+      harmonicDissonanceTolerance: aesthetic.harmonicDissonanceTolerance,
+      rhythmPreference: aesthetic.rhythmPreference,
+      acousticVsDigital: aesthetic.acousticVsDigital,
     };
 
     // Aggregate interactions for behavioral input
-    const { data: interactions } = await supabase
-      .from('user_content_interactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const interactions = await prisma.userContentInteraction.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
 
-    const interactionsSummary = aggregateInteractions(interactions ?? []);
+    const interactionsSummary = aggregateInteractions(interactions);
 
     // Recompute profile
     const { profile, result, enhanced } = computeConstellationProfile(
@@ -241,29 +205,35 @@ export async function POST(request: NextRequest) {
     );
 
     // Update constellation profile
-    const { error: updateError } = await supabase
-      .from('constellation_profiles')
-      .upsert(
-        {
-          user_id: userId,
-          primary_constellation_id: profile.primaryConstellationId,
-          blend_weights: profile.blendWeights,
-          subtaste_index: profile.subtasteIndex,
-          explorer_score: profile.explorerScore,
-          early_adopter_score: profile.earlyAdopterScore,
-          enhanced_interpretation: enhanced ?? null,
-        },
-        { onConflict: 'user_id' }
-      );
-
-    if (updateError) throw updateError;
+    await prisma.constellationProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        primaryConstellationId: profile.primaryConstellationId,
+        blendWeights: profile.blendWeights,
+        subtasteIndex: profile.subtasteIndex,
+        explorerScore: profile.explorerScore,
+        earlyAdopterScore: profile.earlyAdopterScore,
+        enhancedInterpretation: enhanced ?? null,
+      },
+      update: {
+        primaryConstellationId: profile.primaryConstellationId,
+        blendWeights: profile.blendWeights,
+        subtasteIndex: profile.subtasteIndex,
+        explorerScore: profile.explorerScore,
+        earlyAdopterScore: profile.earlyAdopterScore,
+        enhancedInterpretation: enhanced ?? null,
+      },
+    });
 
     // Save to history
-    await supabase.from('profile_history').insert({
-      user_id: userId,
-      profile_type: 'constellation',
-      profile_data: { constellation: profile },
-      trigger: 'manual_update',
+    await prisma.profileHistory.create({
+      data: {
+        userId,
+        profileType: 'constellation',
+        profileData: { constellation: profile },
+        trigger: 'manual_update',
+      },
     });
 
     return NextResponse.json({
@@ -283,8 +253,8 @@ export async function POST(request: NextRequest) {
  * Aggregate interactions into summary stats
  */
 function aggregateInteractions(interactions: Array<{
-  interaction_type: string;
-  dwell_time_ms: number | null;
+  interactionType: string;
+  dwellTimeMs: number | null;
 }>) {
   if (interactions.length === 0) {
     return {
@@ -304,11 +274,11 @@ function aggregateInteractions(interactions: Array<{
   }
 
   const likes = interactions.filter((i) =>
-    ['like', 'save', 'share'].includes(i.interaction_type)
+    ['like', 'save', 'share'].includes(i.interactionType)
   ).length;
 
   const dwellTimes = interactions
-    .map((i) => i.dwell_time_ms)
+    .map((i) => i.dwellTimeMs)
     .filter((t): t is number => t !== null);
 
   return {

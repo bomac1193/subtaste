@@ -1,150 +1,329 @@
-# Subtaste
+# subtaste
 
-**The psychometric taste intelligence platform that knows who you are, not just what you clicked.**
+Unified taste profiling infrastructure for the VIOLET SPHINX ecosystem.
 
----
+## The Twelve
 
-## The Diagnosis
+Every user carries a Glyph—a classification within the subtaste pantheon:
 
-The content discovery industry is fundamentally broken.
+**KETH** · **STRATA** · **OMEN** · **SILT** · **CULL** · **LIMN** · **TOLL** · **VAULT** · **WICK** · **ANVIL** · **SCHISM** · **VOID**
 
-**The core problem**: Current recommendation systems optimize for engagement metrics (clicks, watch time, shares) rather than genuine taste alignment. This creates a cascade of failures:
+The Glyph is your creative signature. It describes how you find, filter, and champion what matters.
 
-1. **Algorithmic Homogenization** - Platforms push users toward the same viral content, collapsing taste diversity into a narrow band of "safe" recommendations
-2. **Engagement ≠ Satisfaction** - High engagement often correlates with anxiety, FOMO, and content regret—not genuine enjoyment
-3. **Identity Blindness** - Systems model behavior without understanding the person behind it. They know you watched something; they don't know why
-4. **Cross-Modal Fragmentation** - Your music app doesn't know your visual taste. Your fashion feed doesn't know your sonic preferences. Each platform builds an incomplete silhouette
-5. **Subculture Erasure** - Emerging aesthetic movements get flattened into mainstream-adjacent categories, killing the very niches that drive cultural evolution
-
-The result: billions spent on recommendation engines that make users feel increasingly unseen, manipulated, and aesthetically adrift.
+For those who seek further: each Glyph carries a formal classification—its Sigil. Request it when you are ready.
 
 ---
 
-## What Subtaste Solves
+## Strategic Vision
 
-Subtaste builds a **unified taste identity** by combining psychometric profiling with behavioral learning across content types.
+### Diagnosis: The Taste Crisis
 
-Instead of asking "what content will keep them scrolling?", we ask: **"Who is this person, and what would genuinely resonate with their aesthetic DNA?"**
+The creative tools market faces a fundamental problem: personalisation without depth. Current systems optimise for engagement metrics, not creative alignment. They know what you clicked, not why you create.
 
-### The Multi-Layer Taste System
+As AI generates infinite content, the bottleneck shifts from production to curation. Labels spend $8.1B annually on A&R with 10-20% success rates. 45 million songs have never been played once. The question is no longer "what can we make?" but "what deserves to exist?"
 
-1. **Psychometric Layer** - Big Five personality traits + extended taste-relevant dimensions (novelty seeking, aesthetic sensitivity, risk tolerance)
-2. **Aesthetic Layer** - Visual preferences (darkness, complexity, organic vs. synthetic) and music preferences (tempo, energy, acoustic vs. digital)
-3. **Constellation Layer** - 27 archetypal taste profiles that map psychometric traits to aesthetic expressions
-4. **Behavioral Layer** - Continuous learning from swipe interactions, dwell time, and explicit ratings
+Taste is becoming the scarcest resource.
 
-A user isn't just "likes dark electronic music." They're **Nycataria**—nocturnal, urban-drawn, finding clarity after midnight, with specific trait expressions that predict their response to imagery, fashion, and AI-generated artifacts alike.
+### Guiding Policy: Layered Architecture
 
----
+We reject the false choice between scientific validity and archetypal depth. Our approach:
 
-## Guiding Policy
+1. **Psychometric foundation**: Validated instruments inform the engine
+2. **Archetypal resonance**: Cultural depth that statistics cannot capture
+3. **Behavioural learning**: Signals that evolve the profile over time
 
-**We optimize for taste coherence, not engagement addiction.**
+The architecture is deliberately opaque. Users receive their Glyph. The machinery stays hidden.
 
-### Core Principles
+### Strategic Roadmap
 
-- **Identity First**: Understand the person before recommending content
-- **Cross-Modal Unity**: One taste profile works across images, music, and AI artifacts
-- **Subculture Preservation**: Detect and amplify emerging aesthetic movements before they're diluted
-- **Psychometric Grounding**: Build on validated psychological science, not pure behavioral correlation
-- **Transparent Scoring**: Users see why content matches (or doesn't) their profile
+**Year 1-5**: Establish subtaste as the standard taste profiling library for creative tools
+- Ship SDK, gain adoption across VIOLET SPHINX ecosystem
+- Prove predictive validity
+- Build B2B API for external developers
 
-### Competitive Strengths
+**Year 5-10**: Become infrastructure
+- Taste profiles portable across platforms
+- License to labels for A&R intelligence
+- Cross-modal taste transfer
 
-| Traditional Recommenders | Subtaste |
-|-------------------------|----------|
-| Optimize for engagement metrics | Optimize for taste alignment |
-| Behavioral-only signals | Psychometric + aesthetic + behavioral fusion |
-| Single-modal (music OR images OR video) | Cross-modal unified profile |
-| Reactive (based on past clicks) | Predictive (based on identity) |
-| Homogenizing effect | Subculture-preserving |
-| Black box scoring | Interpretable constellation mapping |
+**Year 10-20**: Own the taste graph
+- Network effects compound
+- Taste credentials become verifiable
+- Settlement layer integration
 
----
+**Year 20-40**: Taste as currency
+- Human curation compensated as the scarce resource it is
+- AI creates, humans curate—and curators earn
 
-## Strategy & Objectives
+### Revenue Model
 
-### Strategic Divergence
-
-Rather than competing on the same axes as existing platforms (more data, faster algorithms, bigger content libraries), Subtaste diverges on **what we optimize for**:
-
-- **Eliminate**: Engagement-maximizing dark patterns, infinite scroll addiction loops
-- **Reduce**: Cold-start problem (quiz provides immediate signal), content anxiety
-- **Raise**: Taste self-awareness, cross-modal discovery, subculture connection
-- **Create**: Psychometric taste identity, constellation archetypes, early-adopter detection
-
-### Primary Objectives
-
-1. **Build the Taste Graph** - Create the most accurate cross-modal taste profiling system using psychometric science + aesthetic feature mapping
-
-2. **Enable Subculture Discovery** - Detect emerging aesthetic clusters before mainstream recognition, connecting early adopters to their nascent communities
-
-### Key Metrics
-
-- **Subtaste Index**: Measures coherence/distinctiveness of user taste (0-100)
-- **Explorer Score**: How actively users seek new experiences
-- **Early Adopter Score**: Tendency to discover trends before mainstream adoption
-- **Cross-Modal Hit Rate**: Accuracy of predictions across content types
+| Horizon | Primary Revenue | Secondary Revenue |
+|---------|-----------------|-------------------|
+| 1-5 years | SDK licensing | Freemium consumer profiling |
+| 5-10 years | B2B API (labels, platforms) | Taste intelligence reports |
+| 10-20 years | Protocol fees | Cross-platform licensing |
+| 20-40 years | Settlement layer fees | Credential marketplace |
 
 ---
 
-## Revolutionary Value Offering
+## Installation
 
-### For Users
+```bash
+pnpm add @subtaste/core @subtaste/profiler
+```
 
-- **Know Yourself**: Discover your constellation and understand your aesthetic DNA
-- **Find Your People**: Connect with others who share your specific taste profile, not just surface-level genre preferences
-- **Cross-Modal Discovery**: Love a track? Find images, fashion, and AI art that resonates with the same taste vector
-- **Escape the Algorithm**: Content scored by genuine alignment, not engagement manipulation
+## Usage
 
-### For Creators & Brands
+```typescript
+import {
+  classifySignals,
+  toGlyph,
+  getArchetype,
+  generateIdentityStatement
+} from '@subtaste/core';
 
-- **Psychographic Targeting**: Reach audiences by taste identity, not just demographics
-- **Subculture Intelligence**: Identify emerging movements and their aesthetic signatures
-- **Cross-Modal Campaigns**: Design experiences that resonate across visual, sonic, and symbolic dimensions
+import {
+  createOrchestrator,
+  createInitialAssessment,
+  submitResponse
+} from '@subtaste/profiler';
 
-### For the Ecosystem
+// Create orchestrator for a user
+const orchestrator = createOrchestrator(userId);
 
-- **Preserve Taste Diversity**: Counter algorithmic homogenization by amplifying niche aesthetics
-- **Validate Subcultures**: Give emerging movements data-backed identity before they're diluted
-- **Bridge Modalities**: Enable discovery across content types that currently exist in siloed platforms
+// Start initial assessment
+const assessment = orchestrator.startInitialAssessment();
+
+// Submit responses
+let state = assessment;
+state = submitResponse(state, 0); // First question: option A
+state = submitResponse(state, 1); // Second question: option B
+state = submitResponse(state, 0); // Third question: option A
+
+// Complete and get genome
+const genome = orchestrator.completeActiveAssessment();
+
+// Get the user's Glyph
+const glyph = genome.archetype.primary.glyph; // e.g., 'CULL'
+
+// Get identity statement
+const statement = generateIdentityStatement(
+  genome.archetype.primary.designation,
+  genome.archetype.secondary?.designation || null
+);
+// "You are CULL, The Essential Editor. The CULL removes..."
+```
+
+### Recording Behavioural Signals
+
+```typescript
+import { behaviourBatchToSignals } from '@subtaste/profiler';
+
+// Record user behaviour
+orchestrator.recordBehaviour([
+  { type: 'save', itemId: 'track-123', timestamp: new Date() },
+  { type: 'skip', itemId: 'track-456', timestamp: new Date() },
+  { type: 'share', itemId: 'track-789', timestamp: new Date() }
+]);
+
+// Process signals and update genome
+const updatedGenome = orchestrator.processPendingSignals();
+```
+
+### Sigil Reveal
+
+```typescript
+import { revealSigil, getPrimarySigil } from '@subtaste/core';
+
+// User requests formal classification
+const revealedGenome = revealSigil(genome);
+const sigil = getPrimarySigil(revealedGenome); // e.g., 'Severis'
+```
 
 ---
 
-## Market Positioning Through Divergence
+## Architecture
 
-Subtaste doesn't compete in the crowded "better recommendations" space. We create a new category: **Taste Intelligence**.
+```
+┌─────────────────────────────────────────────────────┐
+│                    APPLICATIONS                      │
+│         Refyn · SELECTR · DROPR · CANORA            │
+└─────────────────────┬───────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│                @subtaste/profiler                    │
+│        Instruments · Questions · Progressive        │
+└─────────────────────┬───────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│                  @subtaste/core                      │
+│     Pantheon · Engine · Genome · Context            │
+├─────────────────────────────────────────────────────┤
+│                    [HIDDEN]                          │
+│        Psychometrics · Sephirotic · Orisha          │
+└─────────────────────────────────────────────────────┘
+```
 
-| Axis | Industry Standard | Subtaste Position |
-|------|-------------------|-------------------|
-| Signal Source | Clicks, views, time | Psychometrics + aesthetics + behavior |
-| Output | "You might like..." | "This is who you are" |
-| Scope | Single platform/modality | Cross-modal identity |
-| User Relationship | Passive consumer | Active self-discovery |
-| Cultural Effect | Homogenization | Subculture amplification |
+### Package Structure
 
-We're not building a better recommendation engine. We're building the **identity layer for taste**—the system that understands aesthetic preference at a level current platforms can't reach because they're optimizing for the wrong objective function.
+```
+packages/
+├── core/                      # Shared taste genome logic
+│   ├── types/                 # TasteGenome, Archetype, Signal types
+│   ├── pantheon/              # THE TWELVE definitions
+│   │   ├── definitions.ts     # Public archetypes
+│   │   └── internal.ts        # Engine weights (NEVER EXPORT)
+│   ├── engine/                # Classification algorithm
+│   ├── genome/                # TasteGenome operations
+│   └── context/               # Multi-context profiles
+│
+└── profiler/                  # Assessment instruments
+    ├── instruments/           # Initial, Calibration, Implicit
+    ├── questions/             # Question bank and mappings
+    └── progressive/           # Stage orchestration
+```
 
 ---
 
-## The 27 Constellations
+## The Pantheon
 
-Each constellation represents a coherent taste archetype with specific psychometric profiles, visual signatures, and sonic preferences:
-
-**Somnexis** · **Nycataria** · **Holovain** · **Obscyra** · **Holofern** · **Prismant** · **Luminth** · **Crysolen** · **Nexyra** · **Velocine** · **Astryde** · **Noctyra** · **Glemyth** · **Vireth** · **Chromyne** · **Opalith** · **Fluxeris** · **Glovern** · **Vantoryx** · **Silquor** · **Iridrax** · **Prismora** · **Lucidyne** · **Velisynth** · **Aurivox** · **Glaceryl** · **Radianth**
-
-Users are mapped to a primary constellation with blend weights showing affinity across all archetypes—enabling both clear identity ("You are Somnexis") and nuanced scoring through the full constellation spectrum.
+| Glyph | Essence | Creative Mode |
+|-------|---------|---------------|
+| KETH | The unmarked throne. First without announcement. | Visionary |
+| STRATA | The hidden architecture. Layers beneath surfaces. | Architectural |
+| OMEN | What arrives before itself. The shape of the unformed. | Prophetic |
+| SILT | Patient sediment. What accumulates in darkness. | Developmental |
+| CULL | The necessary cut. What must be removed, removed. | Editorial |
+| LIMN | To illuminate by edge. The binding outline. | Integrative |
+| TOLL | The bell that cannot be unheard. The summons. | Advocacy |
+| VAULT | What is kept. Writing over writing. | Archival |
+| WICK | Draws flame upward without burning. The hollow channel. | Channelling |
+| ANVIL | Where pressure becomes form. The manifestation point. | Manifestation |
+| SCHISM | The productive fracture. What breaks to reveal grain. | Contrarian |
+| VOID | The deliberate absence. What receives by containing nothing. | Receptive |
 
 ---
 
-## Technical Foundation
+## Progressive Profiling
 
-- **Next.js** application with Prisma data layer
-- **Psychometric quiz** using validated personality assessment techniques
-- **Swipe-based learning** with dwell time tracking and A/B comparison
-- **Cross-modal scoring engine** computing alignment across images, music, and AI artifacts
-- **Constellation matching** using trait-profile distance calculations
+Subtaste uses progressive profiling to build taste genomes without friction:
+
+### Stage 1: Initial Spark (Onboarding)
+- 3 binary questions
+- ~30 seconds
+- Sufficient for primary Glyph assignment
+
+### Stage 2: Music Calibration (Milestone)
+- 3 Likert questions
+- Triggered after 5 interactions
+- Refines MUSIC dimensions
+
+### Stage 3: Deep Calibration (On-Demand)
+- 5 mixed questions
+- ~2 minutes
+- Unlocks confidence boost
 
 ---
 
-*Subtaste: Because your aesthetic identity deserves better than an engagement algorithm.*
+## Key Concepts
+
+### Three Registers
+
+Each archetype carries three layers of identity:
+
+1. **Glyph** - The spoken name (public, what users claim)
+2. **Sigil** - Formal notation (revealed on request)
+3. **Designation** - Alphanumeric code (power users only)
+
+### Hidden Layers
+
+The classification engine is powered by hidden layers never exposed to users:
+
+- **Psychometric weights** - Big Five Openness facets + MUSIC model
+- **Sephirotic balance** - Structural relationships from Kabbalistic Tree
+- **Orisha resonance** - Energetic signatures and shadow patterns
+
+These inform the algorithm but remain invisible. Users experience archetypes, not statistics.
+
+### Multi-Context Profiles
+
+Inspired by Spotify's contextual vectors, users can have different taste expressions:
+
+- **Creating** - When making things
+- **Consuming** - When experiencing content
+- **Curating** - When selecting and organising
+
+---
+
+## API Reference
+
+### Core Exports
+
+```typescript
+// Classification
+classify(input: ClassificationInput): ClassificationResult
+classifySignals(signals: Signal[]): ArchetypeClassification
+
+// Pantheon
+PANTHEON: Record<Designation, ArchetypeDefinition>
+getArchetype(designation: Designation): ArchetypeDefinition
+toGlyph(designation: Designation): Glyph
+toSigil(designation: Designation): Sigil
+
+// Genome
+encodeSignalsToGenome(userId: string, signals: Signal[]): TasteGenome
+updateGenomeWithSignals(genome: TasteGenome, signals: Signal[]): TasteGenome
+toPublicGenome(genome: TasteGenome): TasteGenomePublic
+revealSigil(genome: TasteGenome): TasteGenome
+
+// Context
+getContextualDistribution(genome: TasteGenome, context: string): Record<Designation, number>
+detectContext(signals: Signal[]): ContextDetection
+```
+
+### Profiler Exports
+
+```typescript
+// Assessment
+createInitialAssessment(): InitialAssessmentState
+submitResponse(state: InitialAssessmentState, response: 0 | 1): InitialAssessmentState
+completeAssessment(state: InitialAssessmentState): InitialAssessmentResult
+
+// Calibration
+createMusicCalibration(): CalibrationState
+createDeepCalibration(): CalibrationState
+
+// Orchestration
+createOrchestrator(userId: string, existingGenome?: TasteGenome): ProfilingOrchestrator
+
+// Signals
+behaviourToSignal(event: BehaviouralEvent): Signal
+responsesToSignals(responses: QuestionResponse[]): Signal[]
+```
+
+---
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Type check
+pnpm -r typecheck
+
+# Run Next.js dev server
+pnpm dev
+```
+
+---
+
+## Licence
+
+Proprietary. VIOLET SPHINX ecosystem only.
+
+---
+
+*subtaste: Because your aesthetic identity deserves better than an engagement algorithm.*
