@@ -25,6 +25,8 @@ interface QuizSubmission {
   }>;
 }
 
+const ENTROPY_CONFIDENCE_GATE = 0.35;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as QuizSubmission;
@@ -66,6 +68,8 @@ export async function POST(request: NextRequest) {
 
     // Process quiz and create genome
     const result = await processQuizSubmission(userId, responses);
+    const entropyConfidence = calculateEntropyConfidence(result.genome.archetype.distribution);
+    const sufficientData = entropyConfidence >= ENTROPY_CONFIDENCE_GATE;
 
     // Update quiz session if provided
     if (sessionId) {
@@ -110,7 +114,10 @@ export async function POST(request: NextRequest) {
       genome: result.genome,
       glyph: result.genome.archetype.primary.glyph,
       designation: result.genome.archetype.primary.designation,
-      confidence: result.genome.confidence
+      confidence: result.genome.confidence,
+      entropyConfidence,
+      confidenceThreshold: ENTROPY_CONFIDENCE_GATE,
+      sufficientData
     });
   } catch (error) {
     console.error('Quiz submission error:', error);
@@ -213,4 +220,22 @@ function validateResponse(question: Question, response: number | number[]): stri
   }
 
   return 'Unsupported question type';
+}
+
+function calculateEntropyConfidence(distribution: Record<string, number> | undefined): number {
+  if (!distribution) return 0;
+  const values = Object.values(distribution).filter((value) => Number.isFinite(value));
+  if (values.length === 0) return 0;
+  if (values.length === 1) return 1;
+
+  let entropy = 0;
+  for (const value of values) {
+    if (value > 0) {
+      entropy -= value * Math.log(value);
+    }
+  }
+
+  const maxEntropy = Math.log(values.length);
+  if (maxEntropy === 0) return 1;
+  return 1 - (entropy / maxEntropy);
 }
