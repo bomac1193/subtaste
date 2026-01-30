@@ -38,9 +38,9 @@ export const PROFILING_STAGES: ProfilingStage[] = [
   {
     id: 'initial',
     name: 'Initial Spark',
-    description: 'Three questions to discover your primary Glyph.',
+    description: 'Sampled questions to discover your primary Glyph.',
     trigger: 'onboarding',
-    questionCount: 3,
+    questionCount: 10,
     estimatedSeconds: 30,
     confidenceGain: 0.3,
     prerequisites: []
@@ -51,7 +51,7 @@ export const PROFILING_STAGES: ProfilingStage[] = [
     description: 'Refine your taste profile with music-specific questions.',
     trigger: 'milestone',
     milestoneThreshold: 5,
-    questionCount: 3,
+    questionCount: 10,
     estimatedSeconds: 45,
     confidenceGain: 0.15,
     prerequisites: ['initial']
@@ -61,7 +61,7 @@ export const PROFILING_STAGES: ProfilingStage[] = [
     name: 'Deep Calibration',
     description: 'Unlock your full taste genome with an extended assessment.',
     trigger: 'on-demand',
-    questionCount: 5,
+    questionCount: 10,
     estimatedSeconds: 120,
     confidenceGain: 0.2,
     prerequisites: ['initial', 'music']
