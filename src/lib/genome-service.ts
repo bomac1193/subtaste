@@ -12,7 +12,6 @@ import { prisma } from './prisma';
 import type {
   TasteGenome,
   TasteGenomePublic,
-  Designation,
   Signal,
   Psychometrics
 } from '@subtaste/core';
@@ -26,6 +25,7 @@ import {
   serializeGenome,
   deserializeGenome
 } from '@subtaste/core';
+import { responsesToSignals } from '@subtaste/profiler';
 
 /**
  * Get full genome for a user (server-side only)
@@ -237,7 +237,7 @@ export async function revealSigil(userId: string): Promise<boolean> {
  */
 export async function processQuizSubmission(
   userId: string | undefined,
-  responses: Array<{ questionId: string; response: number }>
+  responses: Array<{ questionId: string; response: number | number[] }>
 ): Promise<{ userId: string; genome: TasteGenomePublic }> {
   // Create user if needed
   let finalUserId = userId;
@@ -249,18 +249,19 @@ export async function processQuizSubmission(
     finalUserId = newUser.id;
   }
 
-  // Convert quiz responses to signals
-  const signals: Signal[] = responses.map(r => ({
-    type: 'explicit' as const,
-    timestamp: new Date(),
-    source: 'quiz' as const,
-    data: {
-      kind: 'preference' as const,
-      itemId: r.questionId,
-      value: r.response === 0 ? 'A' : 'B',
-      archetypeWeights: inferArchetypeWeights(r.questionId, r.response)
-    }
-  }));
+  // Convert quiz responses to signals via @subtaste/profiler mapping
+  const signals: Signal[] = responsesToSignals(
+    responses.map((r) => ({
+      questionId: r.questionId,
+      response: r.response as number | number[],
+      timestamp: new Date()
+    })),
+    'quiz'
+  );
+
+  if (signals.length === 0) {
+    throw new Error('No valid signals generated from responses');
+  }
 
   // Update genome from signals
   const genome = await updateGenomeFromSignals(finalUserId, signals);
@@ -272,44 +273,6 @@ export async function processQuizSubmission(
     userId: finalUserId,
     genome: publicGenome
   };
-}
-
-/**
- * Infer archetype weights from quiz question
- * This maps question responses to archetype affinities
- */
-function inferArchetypeWeights(
-  questionId: string,
-  response: number
-): Partial<Record<Designation, number>> {
-  // Question-to-archetype mapping based on INITIAL_QUESTIONS
-  const mappings: Record<string, [Partial<Record<Designation, number>>, Partial<Record<Designation, number>>]> = {
-    'init-1-approach': [
-      // Option A: "Keep it close" - private, selective
-      { 'S-0': 0.3, 'C-4': 0.3, 'P-7': 0.2 },
-      // Option B: "Spread the word" - public, evangelical
-      { 'H-6': 0.4, 'N-5': 0.2, 'F-9': 0.2 }
-    ],
-    'init-2-timing': [
-      // Option A: "Ahead of its time" - early adopter
-      { 'V-2': 0.4, 'R-10': 0.3, 'D-8': 0.15 },
-      // Option B: "Refined within tradition" - patient, archival
-      { 'L-3': 0.3, 'P-7': 0.3, 'T-1': 0.2 }
-    ],
-    'init-3-creation': [
-      // Option A: "Build the structure first" - systematic
-      { 'T-1': 0.4, 'F-9': 0.3, 'S-0': 0.15 },
-      // Option B: "Discover through doing" - intuitive
-      { 'D-8': 0.4, 'Ø': 0.25, 'V-2': 0.2 }
-    ]
-  };
-
-  const mapping = mappings[questionId];
-  if (!mapping) {
-    return {}; // Unknown question
-  }
-
-  return mapping[response] || {};
 }
 
 /**

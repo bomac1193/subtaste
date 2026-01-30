@@ -7,14 +7,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { processQuizSubmission, getProfilingProgress } from '@/lib/genome-service';
+import {
+  getQuestionById,
+  type Question,
+  type LikertQuestion,
+  type RankingQuestion
+} from '@subtaste/profiler';
 import { prisma } from '@/lib/prisma';
 
 interface QuizSubmission {
   userId?: string;
   sessionId?: string;
+  stageId?: 'initial' | 'music' | 'deep';
   responses: Array<{
     questionId: string;
-    response: 0 | 1;
+    response: number | number[];
   }>;
 }
 
@@ -23,21 +30,38 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as QuizSubmission;
     const { userId, sessionId, responses } = body;
 
-    if (!responses || responses.length === 0) {
+    if (!Array.isArray(responses) || responses.length === 0) {
       return NextResponse.json(
         { error: 'No responses provided' },
         { status: 400 }
       );
     }
 
-    // Validate responses
+    // Validate responses against question definitions
+    const validationErrors: Array<{ questionId: string; error: string }> = [];
     for (const r of responses) {
-      if (!r.questionId || (r.response !== 0 && r.response !== 1)) {
-        return NextResponse.json(
-          { error: 'Invalid response format' },
-          { status: 400 }
-        );
+      if (!r || typeof r.questionId !== 'string' || r.questionId.length === 0) {
+        validationErrors.push({ questionId: String(r?.questionId || ''), error: 'Missing questionId' });
+        continue;
       }
+
+      const question = getQuestionById(r.questionId);
+      if (!question) {
+        validationErrors.push({ questionId: r.questionId, error: 'Unknown questionId' });
+        continue;
+      }
+
+      const error = validateResponse(question, r.response);
+      if (error) {
+        validationErrors.push({ questionId: r.questionId, error });
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { error: 'Invalid response format', details: validationErrors },
+        { status: 400 }
+      );
     }
 
     // Process quiz and create genome
@@ -139,4 +163,54 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function validateResponse(question: Question, response: number | number[]): string | null {
+  if (question.type === 'binary') {
+    if (typeof response !== 'number' || !Number.isInteger(response) || (response !== 0 && response !== 1)) {
+      return 'Binary response must be 0 or 1';
+    }
+    return null;
+  }
+
+  if (question.type === 'likert') {
+    const likert = question as LikertQuestion;
+    if (typeof response !== 'number' || !Number.isInteger(response)) {
+      return 'Likert response must be an integer';
+    }
+    if (response < 1 || response > likert.scale) {
+      return `Likert response must be between 1 and ${likert.scale}`;
+    }
+    return null;
+  }
+
+  if (question.type === 'ranking') {
+    const ranking = question as RankingQuestion;
+    if (!Array.isArray(response)) {
+      return 'Ranking response must be an array of indices';
+    }
+    const itemsLength = ranking.items?.length || 0;
+    if (itemsLength === 0) {
+      return 'Ranking question has no items';
+    }
+    if (response.length !== itemsLength) {
+      return `Ranking response must include ${itemsLength} items`;
+    }
+    const seen = new Set<number>();
+    for (const entry of response) {
+      if (typeof entry !== 'number' || !Number.isInteger(entry)) {
+        return 'Ranking response must be an array of integer indices';
+      }
+      if (entry < 0 || entry >= itemsLength) {
+        return `Ranking index out of range (0-${itemsLength - 1})`;
+      }
+      if (seen.has(entry)) {
+        return 'Ranking response must not contain duplicates';
+      }
+      seen.add(entry);
+    }
+    return null;
+  }
+
+  return 'Unsupported question type';
 }
