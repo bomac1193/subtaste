@@ -27,6 +27,8 @@ export {
   calculateConfidenceGain
 } from './mapping';
 
+export { sampleQuestions } from './sample';
+
 export type {
   BinaryResponse,
   LikertResponse,

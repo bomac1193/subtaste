@@ -62,7 +62,8 @@ export {
   mapRankingResponse,
   responseToSignal,
   responsesToSignals,
-  calculateConfidenceGain
+  calculateConfidenceGain,
+  sampleQuestions
 } from './questions';
 
 export type {
