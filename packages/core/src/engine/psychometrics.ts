@@ -14,7 +14,7 @@ import type {
   ExplicitSignal
 } from '../types';
 import { isExplicitSignal, ALL_DESIGNATIONS } from '../types';
-import { INTERNAL_MAPPINGS, type PsychometricWeights } from '../pantheon/internal';
+import { INTERNAL_MAPPINGS, normalizePsychometricWeights } from '../pantheon/internal';
 
 /**
  * Default psychometric profile (neutral starting point)
@@ -123,29 +123,40 @@ function archetypeWeightsToPsychometricDelta(
 
   for (const [designation, weight] of Object.entries(weights)) {
     const d = designation as Designation;
-    const psycho = INTERNAL_MAPPINGS[d].psychometricWeights;
+    const rawWeights = INTERNAL_MAPPINGS[d].psychometricWeights;
+    const psycho = normalizePsychometricWeights(rawWeights);
+    const isLegacyScalar = typeof rawWeights.openness === 'number';
 
     // Scale by the question weight
     const scale = weight * 0.1; // Small increments per question
 
     // Adjust openness (general openness affects all facets slightly)
-    const opennessAdjust = (psycho.openness - 0.5) * scale;
-    delta.openness!.fantasy = (delta.openness!.fantasy || 0) + opennessAdjust * 0.8;
-    delta.openness!.aesthetics = (delta.openness!.aesthetics || 0) + opennessAdjust;
-    delta.openness!.feelings = (delta.openness!.feelings || 0) + opennessAdjust * 0.6;
-    delta.openness!.actions = (delta.openness!.actions || 0) + opennessAdjust * 0.4;
-    delta.openness!.ideas = (delta.openness!.ideas || 0) + opennessAdjust * 0.7;
-    delta.openness!.values = (delta.openness!.values || 0) + opennessAdjust * 0.5;
+    if (isLegacyScalar) {
+      const opennessAdjust = (psycho.openness.aesthetics - 0.5) * scale;
+      delta.openness!.fantasy = (delta.openness!.fantasy || 0) + opennessAdjust * 0.8;
+      delta.openness!.aesthetics = (delta.openness!.aesthetics || 0) + opennessAdjust;
+      delta.openness!.feelings = (delta.openness!.feelings || 0) + opennessAdjust * 0.6;
+      delta.openness!.actions = (delta.openness!.actions || 0) + opennessAdjust * 0.4;
+      delta.openness!.ideas = (delta.openness!.ideas || 0) + opennessAdjust * 0.7;
+      delta.openness!.values = (delta.openness!.values || 0) + opennessAdjust * 0.5;
+    } else {
+      delta.openness!.fantasy = (delta.openness!.fantasy || 0) + (psycho.openness.fantasy - 0.5) * scale;
+      delta.openness!.aesthetics = (delta.openness!.aesthetics || 0) + (psycho.openness.aesthetics - 0.5) * scale;
+      delta.openness!.feelings = (delta.openness!.feelings || 0) + (psycho.openness.feelings - 0.5) * scale;
+      delta.openness!.actions = (delta.openness!.actions || 0) + (psycho.openness.actions - 0.5) * scale;
+      delta.openness!.ideas = (delta.openness!.ideas || 0) + (psycho.openness.ideas - 0.5) * scale;
+      delta.openness!.values = (delta.openness!.values || 0) + (psycho.openness.values - 0.5) * scale;
+    }
 
     // Adjust intellect
     delta.intellect = (delta.intellect || 0) + (psycho.intellect - 0.5) * scale;
 
     // Adjust music preferences
-    delta.musicPreferences!.mellow = (delta.musicPreferences!.mellow || 0) + (psycho.mellow - 0.5) * scale;
-    delta.musicPreferences!.unpretentious = (delta.musicPreferences!.unpretentious || 0) + (psycho.unpretentious - 0.5) * scale;
-    delta.musicPreferences!.sophisticated = (delta.musicPreferences!.sophisticated || 0) + (psycho.sophisticated - 0.5) * scale;
-    delta.musicPreferences!.intense = (delta.musicPreferences!.intense || 0) + (psycho.intense - 0.5) * scale;
-    delta.musicPreferences!.contemporary = (delta.musicPreferences!.contemporary || 0) + (psycho.contemporary - 0.5) * scale;
+    delta.musicPreferences!.mellow = (delta.musicPreferences!.mellow || 0) + (psycho.music.mellow - 0.5) * scale;
+    delta.musicPreferences!.unpretentious = (delta.musicPreferences!.unpretentious || 0) + (psycho.music.unpretentious - 0.5) * scale;
+    delta.musicPreferences!.sophisticated = (delta.musicPreferences!.sophisticated || 0) + (psycho.music.sophisticated - 0.5) * scale;
+    delta.musicPreferences!.intense = (delta.musicPreferences!.intense || 0) + (psycho.music.intense - 0.5) * scale;
+    delta.musicPreferences!.contemporary = (delta.musicPreferences!.contemporary || 0) + (psycho.music.contemporary - 0.5) * scale;
   }
 
   return delta;
@@ -159,24 +170,33 @@ export function calculatePsychometricSimilarity(
   profile: Psychometrics,
   designation: Designation
 ): number {
-  const target = INTERNAL_MAPPINGS[designation].psychometricWeights;
+  const rawWeights = INTERNAL_MAPPINGS[designation].psychometricWeights;
+  const target = normalizePsychometricWeights(rawWeights);
 
   // Calculate distance for each dimension
   const distances: number[] = [];
 
-  // Openness (averaged across facets)
-  const avgOpenness = Object.values(profile.openness).reduce((a, b) => a + b, 0) / 6;
-  distances.push(Math.abs(avgOpenness - target.openness));
+  if (typeof rawWeights.openness === 'number') {
+    const avgOpenness = Object.values(profile.openness).reduce((a, b) => a + b, 0) / 6;
+    distances.push(Math.abs(avgOpenness - target.openness.aesthetics));
+  } else {
+    distances.push(Math.abs(profile.openness.fantasy - target.openness.fantasy));
+    distances.push(Math.abs(profile.openness.aesthetics - target.openness.aesthetics));
+    distances.push(Math.abs(profile.openness.feelings - target.openness.feelings));
+    distances.push(Math.abs(profile.openness.actions - target.openness.actions));
+    distances.push(Math.abs(profile.openness.ideas - target.openness.ideas));
+    distances.push(Math.abs(profile.openness.values - target.openness.values));
+  }
 
   // Intellect
   distances.push(Math.abs(profile.intellect - target.intellect));
 
   // Music preferences
-  distances.push(Math.abs(profile.musicPreferences.mellow - target.mellow));
-  distances.push(Math.abs(profile.musicPreferences.unpretentious - target.unpretentious));
-  distances.push(Math.abs(profile.musicPreferences.sophisticated - target.sophisticated));
-  distances.push(Math.abs(profile.musicPreferences.intense - target.intense));
-  distances.push(Math.abs(profile.musicPreferences.contemporary - target.contemporary));
+  distances.push(Math.abs(profile.musicPreferences.mellow - target.music.mellow));
+  distances.push(Math.abs(profile.musicPreferences.unpretentious - target.music.unpretentious));
+  distances.push(Math.abs(profile.musicPreferences.sophisticated - target.music.sophisticated));
+  distances.push(Math.abs(profile.musicPreferences.intense - target.music.intense));
+  distances.push(Math.abs(profile.musicPreferences.contemporary - target.music.contemporary));
 
   // Average distance, inverted to similarity
   const avgDistance = distances.reduce((a, b) => a + b, 0) / distances.length;

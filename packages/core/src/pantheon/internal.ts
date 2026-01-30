@@ -12,7 +12,7 @@
  * These power the classification engine but are never exposed to users.
  */
 
-import type { Designation } from '../types';
+import type { Designation, OpennessFacets, MusicPreferences } from '../types';
 
 /**
  * Sephirotic positions on the Tree of Life
@@ -50,15 +50,24 @@ export type Orisha =
  */
 export interface PsychometricWeights {
   // Big Five Openness facets
-  openness: number;      // General openness to experience
-  intellect: number;     // Intellectual curiosity
+  openness: OpennessFacets | number; // number is legacy compatibility
+  intellect: number;
 
   // MUSIC model dimensions
-  mellow: number;
-  unpretentious: number;
-  sophisticated: number;
-  intense: number;
-  contemporary: number;
+  music?: MusicPreferences;
+
+  // Legacy flat fields (deprecated, kept for compatibility)
+  mellow?: number;
+  unpretentious?: number;
+  sophisticated?: number;
+  intense?: number;
+  contemporary?: number;
+}
+
+export interface NormalizedPsychometricWeights {
+  openness: OpennessFacets;
+  intellect: number;
+  music: MusicPreferences;
 }
 
 /**
@@ -69,6 +78,46 @@ export interface InternalMapping {
   orisha: Orisha;
   shadowOrisha: Orisha;
   psychometricWeights: PsychometricWeights;
+}
+
+function coerceOpennessFacets(value: OpennessFacets | number): OpennessFacets {
+  if (typeof value === 'number') {
+    return {
+      aesthetics: value,
+      fantasy: value,
+      feelings: value,
+      actions: value,
+      ideas: value,
+      values: value
+    };
+  }
+
+  return {
+    aesthetics: value.aesthetics ?? 0.5,
+    fantasy: value.fantasy ?? 0.5,
+    feelings: value.feelings ?? 0.5,
+    actions: value.actions ?? 0.5,
+    ideas: value.ideas ?? 0.5,
+    values: value.values ?? 0.5
+  };
+}
+
+export function normalizePsychometricWeights(weights: PsychometricWeights): NormalizedPsychometricWeights {
+  const openness = coerceOpennessFacets(weights.openness);
+
+  const music = weights.music ?? {
+    mellow: weights.mellow ?? 0.5,
+    unpretentious: weights.unpretentious ?? 0.5,
+    sophisticated: weights.sophisticated ?? 0.5,
+    intense: weights.intense ?? 0.5,
+    contemporary: weights.contemporary ?? 0.5
+  };
+
+  return {
+    openness,
+    intellect: weights.intellect,
+    music
+  };
 }
 
 /**
@@ -87,13 +136,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Obatala',
     shadowOrisha: 'Eshu',
     psychometricWeights: {
-      openness: 0.9,
+      openness: {
+        aesthetics: 0.9,
+        fantasy: 0.6,
+        feelings: 0.5,
+        actions: 0.4,
+        ideas: 0.8,
+        values: 0.7
+      },
       intellect: 0.7,
-      mellow: 0.3,
-      unpretentious: 0.1,
-      sophisticated: 0.9,
-      intense: 0.4,
-      contemporary: 0.5
+      music: {
+        mellow: 0.3,
+        unpretentious: 0.1,
+        sophisticated: 0.9,
+        intense: 0.4,
+        contemporary: 0.5
+      }
     }
   },
 
@@ -103,13 +161,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Ogun',
     shadowOrisha: 'Obatala',
     psychometricWeights: {
-      openness: 0.7,
+      openness: {
+        aesthetics: 0.6,
+        fantasy: 0.5,
+        feelings: 0.3,
+        actions: 0.6,
+        ideas: 0.95,
+        values: 0.5
+      },
       intellect: 0.95,
-      mellow: 0.2,
-      unpretentious: 0.3,
-      sophisticated: 0.8,
-      intense: 0.5,
-      contemporary: 0.6
+      music: {
+        mellow: 0.2,
+        unpretentious: 0.3,
+        sophisticated: 0.8,
+        intense: 0.5,
+        contemporary: 0.6
+      }
     }
   },
 
@@ -119,13 +186,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Orunmila',
     shadowOrisha: 'Elegua',
     psychometricWeights: {
-      openness: 0.95,
+      openness: {
+        aesthetics: 0.8,
+        fantasy: 0.9,
+        feelings: 0.7,
+        actions: 0.8,
+        ideas: 0.7,
+        values: 0.6
+      },
       intellect: 0.6,
-      mellow: 0.4,
-      unpretentious: 0.2,
-      sophisticated: 0.85,
-      intense: 0.5,
-      contemporary: 0.8
+      music: {
+        mellow: 0.4,
+        unpretentious: 0.2,
+        sophisticated: 0.85,
+        intense: 0.5,
+        contemporary: 0.8
+      }
     }
   },
 
@@ -135,13 +211,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Yemoja',
     shadowOrisha: 'Ogun',
     psychometricWeights: {
-      openness: 0.7,
+      openness: {
+        aesthetics: 0.6,
+        fantasy: 0.5,
+        feelings: 0.8,
+        actions: 0.4,
+        ideas: 0.5,
+        values: 0.7
+      },
       intellect: 0.5,
-      mellow: 0.8,
-      unpretentious: 0.6,
-      sophisticated: 0.5,
-      intense: 0.2,
-      contemporary: 0.4
+      music: {
+        mellow: 0.8,
+        unpretentious: 0.6,
+        sophisticated: 0.5,
+        intense: 0.2,
+        contemporary: 0.4
+      }
     }
   },
 
@@ -151,13 +236,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Ogun',
     shadowOrisha: 'Yemoja',
     psychometricWeights: {
-      openness: 0.6,
+      openness: {
+        aesthetics: 0.7,
+        fantasy: 0.3,
+        feelings: 0.4,
+        actions: 0.5,
+        ideas: 0.8,
+        values: 0.6
+      },
       intellect: 0.8,
-      mellow: 0.1,
-      unpretentious: 0.2,
-      sophisticated: 0.7,
-      intense: 0.8,
-      contemporary: 0.5
+      music: {
+        mellow: 0.1,
+        unpretentious: 0.2,
+        sophisticated: 0.7,
+        intense: 0.8,
+        contemporary: 0.5
+      }
     }
   },
 
@@ -167,13 +261,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Oshun',
     shadowOrisha: 'Shango',
     psychometricWeights: {
-      openness: 0.8,
+      openness: {
+        aesthetics: 0.8,
+        fantasy: 0.6,
+        feelings: 0.7,
+        actions: 0.6,
+        ideas: 0.6,
+        values: 0.8
+      },
       intellect: 0.6,
-      mellow: 0.5,
-      unpretentious: 0.5,
-      sophisticated: 0.7,
-      intense: 0.5,
-      contemporary: 0.5
+      music: {
+        mellow: 0.5,
+        unpretentious: 0.5,
+        sophisticated: 0.7,
+        intense: 0.5,
+        contemporary: 0.5
+      }
     }
   },
 
@@ -183,13 +286,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Shango',
     shadowOrisha: 'Oshun',
     psychometricWeights: {
-      openness: 0.8,
+      openness: {
+        aesthetics: 0.7,
+        fantasy: 0.6,
+        feelings: 0.9,
+        actions: 0.8,
+        ideas: 0.4,
+        values: 0.5
+      },
       intellect: 0.4,
-      mellow: 0.2,
-      unpretentious: 0.4,
-      sophisticated: 0.5,
-      intense: 0.9,
-      contemporary: 0.7
+      music: {
+        mellow: 0.2,
+        unpretentious: 0.4,
+        sophisticated: 0.5,
+        intense: 0.9,
+        contemporary: 0.7
+      }
     }
   },
 
@@ -199,13 +311,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Orunmila',
     shadowOrisha: 'Elegua',
     psychometricWeights: {
-      openness: 0.75,
+      openness: {
+        aesthetics: 0.8,
+        fantasy: 0.4,
+        feelings: 0.5,
+        actions: 0.3,
+        ideas: 0.9,
+        values: 0.6
+      },
       intellect: 0.9,
-      mellow: 0.6,
-      unpretentious: 0.3,
-      sophisticated: 0.9,
-      intense: 0.3,
-      contemporary: 0.3
+      music: {
+        mellow: 0.6,
+        unpretentious: 0.3,
+        sophisticated: 0.9,
+        intense: 0.3,
+        contemporary: 0.3
+      }
     }
   },
 
@@ -215,13 +336,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Elegua',
     shadowOrisha: 'Orunmila',
     psychometricWeights: {
-      openness: 0.9,
+      openness: {
+        aesthetics: 0.7,
+        fantasy: 0.9,
+        feelings: 0.8,
+        actions: 0.7,
+        ideas: 0.5,
+        values: 0.5
+      },
       intellect: 0.4,
-      mellow: 0.5,
-      unpretentious: 0.5,
-      sophisticated: 0.6,
-      intense: 0.6,
-      contemporary: 0.7
+      music: {
+        mellow: 0.5,
+        unpretentious: 0.5,
+        sophisticated: 0.6,
+        intense: 0.6,
+        contemporary: 0.7
+      }
     }
   },
 
@@ -231,13 +361,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Ogun',
     shadowOrisha: 'Obatala',
     psychometricWeights: {
-      openness: 0.5,
+      openness: {
+        aesthetics: 0.4,
+        fantasy: 0.3,
+        feelings: 0.4,
+        actions: 0.9,
+        ideas: 0.6,
+        values: 0.5
+      },
       intellect: 0.7,
-      mellow: 0.3,
-      unpretentious: 0.7,
-      sophisticated: 0.4,
-      intense: 0.6,
-      contemporary: 0.6
+      music: {
+        mellow: 0.3,
+        unpretentious: 0.7,
+        sophisticated: 0.4,
+        intense: 0.6,
+        contemporary: 0.6
+      }
     }
   },
 
@@ -247,13 +386,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Eshu',
     shadowOrisha: 'Obatala',
     psychometricWeights: {
-      openness: 0.85,
+      openness: {
+        aesthetics: 0.6,
+        fantasy: 0.7,
+        feelings: 0.6,
+        actions: 0.9,
+        ideas: 0.7,
+        values: 0.8
+      },
       intellect: 0.7,
-      mellow: 0.1,
-      unpretentious: 0.3,
-      sophisticated: 0.6,
-      intense: 0.9,
-      contemporary: 0.8
+      music: {
+        mellow: 0.1,
+        unpretentious: 0.3,
+        sophisticated: 0.6,
+        intense: 0.9,
+        contemporary: 0.8
+      }
     }
   },
 
@@ -263,13 +411,22 @@ export const INTERNAL_MAPPINGS: Record<Designation, InternalMapping> = {
     orisha: 'Obatala',
     shadowOrisha: 'Eshu',
     psychometricWeights: {
-      openness: 0.95,
+      openness: {
+        aesthetics: 0.8,
+        fantasy: 0.7,
+        feelings: 0.9,
+        actions: 0.4,
+        ideas: 0.6,
+        values: 0.7
+      },
       intellect: 0.5,
-      mellow: 0.7,
-      unpretentious: 0.6,
-      sophisticated: 0.6,
-      intense: 0.3,
-      contemporary: 0.4
+      music: {
+        mellow: 0.7,
+        unpretentious: 0.6,
+        sophisticated: 0.6,
+        intense: 0.3,
+        contemporary: 0.4
+      }
     }
   }
 } as const;
@@ -285,8 +442,8 @@ export function getInternalMapping(designation: Designation): InternalMapping {
 /**
  * Get psychometric weights for a designation
  */
-export function getPsychometricWeights(designation: Designation): PsychometricWeights {
-  return INTERNAL_MAPPINGS[designation].psychometricWeights;
+export function getPsychometricWeights(designation: Designation): NormalizedPsychometricWeights {
+  return normalizePsychometricWeights(INTERNAL_MAPPINGS[designation].psychometricWeights);
 }
 
 /**
